@@ -7,3 +7,441 @@
     <h1>Bienvenue sur Avenir Capital</h1>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avenir Capital</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--tx:#14231c;--mu:#667a70;--pr:#0b7a4b;--pr2:#e3f4ec;--bd:#dde6e1;--wa:#1dc4ff;--er:#c0392b;--pret:#6366f1;--pret2:#eef2ff;--gold:#f59e0b;--gold2:#fef3c7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1713;--card:#18231d;--tx:#e8f1ec;--mu:#92a79b;--pr:#2fc283;--pr2:#183328;--bd:#27382f;--pret:#818cf8;--pret2:#1e1b4b;--gold:#fbbf24;--gold2:#2d2410}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+#app{max-width:480px;margin:auto;padding:16px}
+h1,h2,h3{margin:0 0 12px}h2{font-size:20px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.hero{background:var(--pr);color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
+.hero small{opacity:.85}.hero b{display:block;font-size:30px}
+.banner-pret{background:linear-gradient(135deg, var(--pret) 0%, #8b5cf6 100%);color:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:12px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,0.25);transition:transform 0.2s;text-decoration:none;display:block}
+.banner-bonus{background:linear-gradient(135deg, var(--gold) 0%, #d97706 100%);color:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:12px;cursor:pointer;box-shadow:0 4px 12px rgba(245,158,11,0.25);transition:transform 0.2s;text-decoration:none;display:block}
+.banner-pret:active, .banner-bonus:active{transform:scale(0.98)}
+.info-box{background:var(--pr2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;line-height:1.5}
+.hour-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center;color:#991b1b}
+input,select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
+label{font-size:13px;color:var(--mu)}
+button{font:inherit;cursor:pointer}
+.btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--pr);color:#fff;font-weight:600}
+.btn.sec{background:var(--pr2);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.sm{width:auto;padding:8px 16px;font-size:14px}
+.btn:disabled{opacity:0.55;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.grid button{padding:16px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.li{display:flex;justify-content:space-between;width:100%;padding:14px;margin-bottom:8px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);text-align:left}
+.tag{font-size:12px;padding:3px 9px;border-radius:20px;background:#fff3cd;color:#7a5b00}
+.tag.pr{background:var(--pr2);color:var(--pr)}.tag.pret{background:var(--pret2);color:var(--pret)}
+.mu{color:var(--mu);font-size:14px}.err{color:var(--er);font-size:14px;min-height:20px;margin:-4px 0 8px}
+.back{background:none;border:0;color:var(--pr);padding:0 0 10px;font-weight:600;font-size:16px;cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:99}
+nav button{flex:1;padding:12px 2px;border:0;background:none;color:var(--mu);font-size:12px}nav button.on{color:var(--pr);font-weight:700}
+nav span{display:block;font-size:20px}
+.link-box{background:var(--pr2);border-radius:8px;padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.link-text{font-size:12px;color:var(--pr);flex:1;min-width:200px;word-break:break-all}
+.copy-btn{background:var(--pr);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-content{background:var(--card);padding:20px;border-radius:14px;max-width:400px;width:100%}
+.modal-content h3{margin-top:0}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+
+<div id="passwordModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>🔒 Sécurité</h3>
+    <p>Entre ton mot de passe pour confirmer cette action :</p>
+    <input id="modalPassword" type="password" placeholder="Ton mot de passe">
+    <div id="modalErr" class="err"></div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn sec" style="flex:1" onclick="closeModal()">Annuler</button>
+      <button class="btn" style="flex:1" onclick="verifyPassword()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged, reauthenticateWithCredential, EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,updateDoc,onSnapshot,collection,query,where,addDoc,runTransaction,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyC8jUCtIrHrySXzNAXTdRTaCBTNgEirS8w",
+  authDomain:"avenir-capital.firebaseapp.com",
+  projectId:"avenir-capital",
+  storageBucket:"avenir-capital.firebasestorage.app",
+  messagingSenderId:"565430762059",
+  appId:"1:565430762059:web:3c7d536d55d3277d35ebce"
+};
+
+const PAYMENT_URL = "https://pay.jeko.africa/pl/4f580acc-5df9-440e-b168-6beb65823bea";
+const SUPPORT = "https://wa.me/message/ABZ2BRFJPVIOE1";
+const BONUS_PREMIUM = 350000;
+const INVITATION_CODE = "QTU7S";
+const BASE_LINK = "https://montelephoneahuawei-cell.github.io/avenir-capital-/";
+const REF_LINK = BASE_LINK + "?ref=" + INVITATION_CODE;
+const DAILY_BONUS_AMT = 200;
+
+const VIP=[
+  {n:"VIP1 — Découverte", icon:"🟢", p:5000, jourRevenu:500, benefice:3500, total:8500, duree:7, jours:7},
+  {n:"VIP2 — Essentiel", icon:"🟡", p:10000, jourRevenu:1000, benefice:15000, total:25000, duree:15, jours:15},
+  {n:"VIP3 — Croissance", icon:"🔵", p:50000, jourRevenu:1500, benefice:30000, total:80000, duree:20, jours:20},
+  {n:"VIP4 — Premium", icon:"🟣", p:100000, jourRevenu:2000, benefice:60000, total:160000, duree:30, jours:30},
+  {n:"VIP5 — Excellence", icon:"🟠", p:200000, jourRevenu:3000, benefice:135000, total:335000, duree:45, jours:45},
+  {n:"VIP6 — Prestige", icon:"🟤", p:500000, jourRevenu:4000, benefice:240000, total:740000, duree:60, jours:60},
+  {n:"VIP7 — Élite", icon:"🔴", p:1000000, jourRevenu:5000, benefice:450000, total:1450000, duree:90, jours:90}
+];
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const fs = getFirestore(app);
+const em = p=>p.replace(/\D/g,"")+"@avenir.app";
+const getTodayStr = ()=>new Date().toISOString().split('T')[0];
+
+const isWithdrawalOpen = () => {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const current = h * 60 + m;
+  const open = 10 * 60;
+  const close = 23 * 60 + 12;
+  return current >= open && current < close;
+};
+
+let ud = null, recs = [], rets = [], buys = [], teamN = 0, unsubs = [], loading = true, P = "signup", T = {};
+let pendingWithdrawalData = null;
+let withdrawalAmount = 0;
+let withdrawalPhone = "";
+
+const me = new Proxy({}, {get:(_,k)=>(ud||{})[k]});
+const U = ()=>ud && {...ud, recs, rets, buys};
+const F = n=>Number(n||0).toLocaleString("fr-FR")+" F";
+const D = ()=>new Date().toLocaleDateString("fr-FR");
+const esc = s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $ = id=>document.getElementById(id)?document.getElementById(id).value.trim():"";
+
+window.go = function(p,t){P=p;if(t)Object.assign(T,t);render();window.scrollTo(0,0)};
+window.err = function(m){const e=document.getElementById("err");if(e)e.textContent=m};
+
+window.openPasswordModal = function(actionType){
+  pendingWithdrawalData = {actionType};
+  document.getElementById("modalPassword").value = "";
+  document.getElementById("modalErr").textContent = "";
+  document.getElementById("passwordModal").classList.remove("hidden");
+};
+
+window.closeModal = function(){
+  document.getElementById("passwordModal").classList.add("hidden");
+  pendingWithdrawalData = null;
+};
+
+window.verifyPassword = async function(){
+  const pwd = document.getElementById("modalPassword").value;
+  const modalErr = document.getElementById("modalErr");
+  
+  if(!auth.currentUser || !auth.currentUser.email){
+    modalErr.textContent = "Utilisateur non connecté";
+    return;
+  }
+  
+  if(!pwd || pwd.length < 6){
+    modalErr.textContent = "Mot de passe incorrect";
+    return;
+  }
+  
+  try{
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, pwd);
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    closeModal();
+    if(pendingWithdrawalData && pendingWithdrawalData.actionType === 'withdraw'){
+      executeWithdrawal();
+    }
+  }catch(e){
+    console.error(e);
+    modalErr.textContent = "Mot de passe incorrect";
+  }
+};
+
+const msg = e=>{
+  console.log("Code erreur:", e.code);
+  const messages={
+    "auth/email-already-in-use":"Ce numéro est déjà inscrit. Utilise un autre numéro ou connecte-toi.",
+    "auth/invalid-email":"Format du numéro invalide.",
+    "auth/weak-password":"Mot de passe trop faible. Utilise au moins 6 caractères.",
+    "auth/invalid-credential":"Numéro ou mot de passe incorrect.",
+    "auth/wrong-password":"Mot de passe incorrect"
+  };
+  return messages[e.code] || ("Erreur : " + (e.message || "Vérifie tes champs"));
+};
+
+const back = (p="home")=>`<button class="back" onclick="go('${p}')">‹ Retour</button>`;
+const hist = (a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
+
+window.copyLink = function(){
+  navigator.clipboard.writeText(REF_LINK).then(()=>alert("✅ Lien copié ! Partage-le ! 🎉")).catch(()=>alert(REF_LINK))
+};
+
+window.claimDailyIncome = async function(docId){
+  if(!auth.currentUser)return;
+  const today = getTodayStr();
+  const purchaseRef = doc(fs, "purchases", docId);
+  try{
+    const purchaseSnap = await getDoc(purchaseRef);
+    if(!purchaseSnap.exists())return;
+    const data = purchaseSnap.data();
+    if(data.lastClaimedDate === today){
+      alert("⏳ Tu as déjà réclamé tes revenus aujourd'hui ! Reviens demain matin 😉");
+      return;
+    }
+    if((data.daysClaimed||0) >= data.duree){
+      alert("✅ Félicitations ! Ce plan est terminé. Tu as reçu tous tes paiements ! 🎉");
+      return;
+    }
+    const gain = data.jourRevenu || 0;
+    const userRef = doc(fs, "users", auth.currentUser.uid);
+    await runTransaction(fs, async (tx) => {
+      const userSnap = await tx.get(userRef);
+      const newBal = (userSnap.data().bal || 0) + gain;
+      tx.update(userRef, { bal: newBal });
+      tx.update(purchaseRef, {
+        lastClaimedDate: today,
+        daysClaimed: (data.daysClaimed || 0) + 1
+      });
+    });
+    ud.bal = (ud.bal || 0) + gain;
+    alert(`✅ Revenus du jour réclamés ! +${F(gain)} crédités sur ton solde 💰`);
+    render();
+  }catch(e){
+    console.error(e);
+    alert("❌ Erreur : " + e.message);
+  }
+};
+
+window.claimDailyBonus = async function(){
+  const today = getTodayStr();
+  if(!ud)return;
+  if(ud.lastBonusClaim === today) return alert("⏳ Bonus déjà récupéré aujourd'hui. Reviens demain !");
+  try{
+    const userRef = doc(fs, "users", ud.id);
+    await updateDoc(userRef, {
+      bal: (ud.bal || 0) + DAILY_BONUS_AMT,
+      lastBonusClaim: today
+    });
+    ud.bal = (ud.bal || 0) + DAILY_BONUS_AMT;
+    ud.lastBonusClaim = today;
+    alert(`✅ Bonus quotidien de ${F(DAILY_BONUS_AMT)} crédité ! 🎁`);
+    render();
+  }catch(e){err("Erreur : " + e.message)}
+};
+
+window.claimCodeBonus = async function(){
+  const code = ($("bonusCode")||"").toUpperCase().trim();
+  if(!code) return err("Entre un code s'il te plaît");
+  const CODES = {"BIENVENUE":1000,"BONUS1000":1000,"AVENIR500":500};
+  if(CODES[code]){
+    const montant = CODES[code];
+    try{
+      const userRef = doc(fs, "users", ud.id);
+      await updateDoc(userRef, { bal: (ud.bal || 0) + montant });
+      ud.bal = (ud.bal || 0) + montant;
+      alert(`✅ Code valide ! ${F(montant)} crédité ! 🎉`);
+      document.getElementById("bonusCode").value = "";
+      err("");
+      render();
+    }catch(e){err("Erreur : " + e.message)}
+  }else{
+    err("Code invalide ou expiré ❌");
+  }
+};
+
+window.signup = async function(){
+  const n=$("n"),p=$("ph"),w=$("pw"),r=$("rf")||INVITATION_CODE;
+  if(!n){return err("Entre ton nom complet s'il te plaît");}
+  if(!p || p.length < 8){return err("Entre un numéro valide (8 chiffres minimum)");}
+  if(!w || w.length < 6){return err("Mot de passe : 6 caractères minimum");}
+  err("");
+  try{
+    const email = em(p);
+    const userCred = await createUserWithEmailAndPassword(auth, email, w);
+    await setDoc(doc(fs, "users", userCred.user.uid), {
+      name: n, phone: p, bal: 0, ref: r, card: null, ts: Date.now(), lastBonusClaim: ""
+    });
+    alert("✅ Compte créé avec succès ! Bienvenue sur Avenir Capital ! 🎉");
+  }catch(e){err(msg(e))}
+};
+
+window.login = async function(){
+  const p=$("ph"),w=$("pw");
+  if(!p || p.length < 8)return err("Entre ton numéro de téléphone");
+  if(!w || w.length < 6)return err("Entre ton mot de passe");
+  err("");
+  try{
+    await signInWithEmailAndPassword(auth, em(p), w);
+  }catch(e){err(msg(e))}
+};
+
+window.logout = function(){signOut(auth)};
+
+window.buy = async function(i){
+  const v=VIP[i];
+  if(!auth.currentUser)return alert("Connecte-toi d'abord !");
+  if((ud.bal||0) < v.p) return alert(`Solde insuffisant ! Il faut ${F(v.p)} pour investir dans ce plan.`);
+  if(!confirm(`Confirmer l'investissement de ${F(v.p)} dans ${v.n} ?`))return;
+  try{
+    await runTransaction(fs,async t=>{
+      const userRef = doc(fs,"users",auth.currentUser.uid);
+      const b=(await t.get(userRef)).data().bal;
+      if(b<v.p)throw{message:"Solde insuffisant"};
+      t.update(userRef,{bal:b-v.p});
+      t.set(doc(collection(fs,"purchases")),{
+        uid:auth.currentUser.uid,n:v.n,icon:v.icon,p:v.p,
+        jourRevenu:v.jourRevenu,benefice:v.benefice,total:v.total,
+        duree:v.duree,t:D(),ts:Date.now(),lastClaimedDate:"",daysClaimed:0
+      });
+    });
+    alert(`✅ Investissement confirmé !\nRéclame tes revenus chaque jour dans "Mes Achats" ! 🎉`);
+    go("achats");
+  }catch(e){err(e.message)}
+};
+
+window.goToPayment = function(){
+  const a=+($("a")||0);
+  if(a<1000)return err("Montant minimum : 1 000 F.");
+  T.amt = a;
+  window.open(PAYMENT_URL, "_blank");
+  go("method");
+};
+
+window.confirmPay = async function(){
+  const p=$("pn"),t=$("tx");
+  if(p.length<8)return err("Entre ton numéro de téléphone.");
+  if(t.length<4)return err("Entre l'ID de transaction reçu.");
+  try{
+    await addDoc(collection(fs,"recharges"),{
+      uid:auth.currentUser.uid,a:T.amt,m:"Paiement en ligne · "+esc(p)+" · ID "+esc(t),
+      t:D(),ts:Date.now(),s:"En attente"
+    });
+    alert("✅ Demande envoyée ! Nous vérifions ton paiement…\nLe solde sera crédité une fois confirmé. Merci !");
+    go("histRec");
+  }catch(e){err("Erreur : " + e.message)}
+};
+
+window.prepareWithdrawal = function(){
+  if(!isWithdrawalOpen()){
+    return err("Les retraits sont ouverts uniquement entre 10h00 et 23h12.");
+  }
+  const a=+($("a")||0),p=$("pn");
+  if(a<1000)return err("Montant minimum : 1 000 F.");
+  if(p.length<8)return err("Entre un numéro valide.");
+  if(a > (ud.bal||0)) return err("Solde insuffisant");
+  
+  withdrawalAmount = a;
+  withdrawalPhone = p;
+  openPasswordModal('withdraw');
+};
+
+async function executeWithdrawal(){
+  const a = withdrawalAmount;
+  const p = withdrawalPhone;
+  
+  if(!confirm(`Confirmer le retrait de ${F(a)} vers ${p} ?`))return;
+  try{
+    await runTransaction(fs,async t=>{
+      const userRef = doc(fs,"users",auth.currentUser.uid);
+      const b=(await t.get(userRef)).data().bal;
+      if(b<a)throw{message:"Solde insuffisant"};
+      t.update(userRef,{bal:b-a});
+      t.set(doc(collection(fs,"withdrawals")),{
+        uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"
+      });
+    });
+    go("histRet");
+    alert("✅ Demande de retrait envoyée !");
+  }catch(e){err(e.message)}
+}
+
+const pages = {
+signup:()=>`<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p><div class="card">
+<label>Nom complet</label><input id="n" placeholder="Ex: Jean Marc">
+<label>Numéro de téléphone</label><input id="ph" type="tel" placeholder="Ex: 0700000000">
+<label>Mot de passe</label><input id="pw" type="password" placeholder="6 caractères minimum">
+<label>Code d’invitation</label><input id="rf" value="${INVITATION_CODE}">
+<div id="err" class="err"></div>
+<button class="btn" onclick="signup()">✅ S'inscrire</button>
+</div>
+<button class="btn sec" onclick="go('login')">J'ai déjà un compte</button>`,
+
+login:()=>`<h1>Avenir Capital</h1><div class="card">
+<label>Numéro de téléphone</label><input id="ph" type="tel" placeholder="Votre numéro">
+<label>Mot de passe</label><input id="pw" type="password" placeholder="Votre mot de passe">
+<div id="err" class="err"></div>
+<button class="btn" onclick="login()">Se connecter</button>
+</div>
+<button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
+
+home:()=>{const u=U();return`<h2>Bonjour ${esc(u.name||'')} 👋</h2>
+<div class="hero"><small>Solde disponible</small><b>${F(u.bal)}</b></div>
+
+<div class="banner-bonus" onclick="go('bonus')">
+    <span style="font-size:28px">🎁</span>
+    <h3 style="margin:4px 0">Obtenir un Bonus</h3>
+    <p style="margin:0;opacity:0.9;font-size:13px">Réclamez votre bonus quotidien & codes promo</p>
+</div>
+
+<a class="banner-pret" href="${SUPPORT}" target="_blank" rel="noopener">
+    <span style="font-size:24px">💰</span>
+    <h3 style="margin:4px 0">Obtenir un Prêt</h3>
+    <p style="margin:0;opacity:0.9;font-size:13px">Jusqu'à ${F(BONUS_PREMIUM)} — Cliquez ici</p>
+</a>
+
+<div class="grid">
+<button onclick="go('recharge')">➕<br>Recharger</button>
+<button onclick="go('withdraw')">💸<br>Retirer</button>
+<button onclick="go('invest')">📈<br>Investir</button>
+<button onclick="window.open('${SUPPORT}','_blank')">🏦<br>Prêt</button>
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 8px">🔗 Parrainer un ami</h3>
+  <p class="mu" style="margin:0 0 8px">Partage ton lien et gagne des bonus !</p>
+  <div class="link-box">
+    <span class="link-text">${REF_LINK}</span>
+    <button class="copy-btn" onclick="copyLink()">Copier</button>
+  </div>
+</div>`},
+
+invest:()=>`${back()}<h2>Investissements VIP</h2>`+VIP.map((v,i)=>`
+<div class="card">
+<div class="row">
+  <h3>${v.icon} ${v.n}</h3>
+  <span class="tag pr">${F(v.p)}</span>
+</div>
+<p class="mu">Revenu quotidien : <b>${F(v.jourRevenu)}</b><br>
+Gain Total : <b>${F(v.total)}</b> (${v.duree} jours)</p>
+<button class="btn" onclick="buy(${i})">Investir ${F(v.p)}</button>
+</div>`).join(""),
+
+achats:()=>{const u=U();return`${back()}<h2>Mes Achats</h2>`+(u.buys.length?u.buys.map(b=>`
+<div class="card">
+<div class="row">
+  <h3>${b.icon||'🟢'} ${esc(b.n)}</h3>
+  <span class="tag pr">${F(b.p)}</span>
+</div>
+<p class="mu">
+  Revenu quotidien : <b>${F(b.jourRevenu)}</b><br>
+  Jours réclamés : <b>${b.daysClaimed||0}/${b.duree}</b><br>
+  Date : ${b.t}
+</p>
+<button class="btn ${b.lastClaimedDate===getTodayStr()?'sec':''}" 
+  ${b.lastClaimedDate===getToda
