@@ -1,13 +1,4 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Mon Projet</title>
-</head>
-<body>
-    <h1>Bienvenue sur Avenir Capital</h1>
-</body>
-</html>
-<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -444,4 +435,147 @@ achats:()=>{const u=U();return`${back()}<h2>Mes Achats</h2>`+(u.buys.length?u.bu
   Date : ${b.t}
 </p>
 <button class="btn ${b.lastClaimedDate===getTodayStr()?'sec':''}" 
-  ${b.lastClaimedDate===getToda
+  ${b.lastClaimedDate===getTodayStr()?'disabled':''} 
+  onclick="claimDailyIncome('${b.id}')">
+  ${b.lastClaimedDate===getTodayStr()?'✅ Revenu du jour déjà reçu':'🎁 Réclamer le revenu du jour'}
+</button>
+</div>`).join(""):`<p class="mu">Aucun investissement en cours.</p>`)},
+
+bonus:()=>`${back()}<h2>Bonus & Codes Promo</h2>
+<div class="card">
+  <h3>🎁 Bonus Quotidien</h3>
+  <p class="mu">Reviens chaque jour pour récupérer ${F(DAILY_BONUS_AMT)} gratuits !</p>
+  <button class="btn gold" onclick="claimDailyBonus()">Réclamer ${F(DAILY_BONUS_AMT)}</button>
+</div>
+<div class="card">
+  <h3>🏷️ Code Promo</h3>
+  <p class="mu">Entre un code promo valide ci-dessous :</p>
+  <input id="bonusCode" placeholder="Ex: BIENVENUE" style="text-transform:uppercase">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="claimCodeBonus()">Activer le code</button>
+</div>`,
+
+recharge:()=>`${back()}<h2>Recharger mon compte</h2>
+<div class="card">
+  <label>Montant à recharger (Min: 1 000 F)</label>
+  <input id="a" type="number" placeholder="Ex: 5000" value="5000">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="goToPayment()">Continuer vers le paiement</button>
+</div>`,
+
+method:()=>`${back('recharge')}<h2>Confirmation du paiement</h2>
+<div class="card">
+  <p class="info-box">Après avoir effectué le paiement en ligne, saisis ton numéro et l'ID de transaction ci-dessous.</p>
+  <label>Ton numéro de téléphone</label>
+  <input id="pn" type="tel" placeholder="Ex: 0700000000">
+  <label>ID / Référence de Transaction</label>
+  <input id="tx" placeholder="Ex: TXN-123456">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="confirmPay()">Valider le rechargement</button>
+</div>`,
+
+withdraw:()=>`${back()}<h2>Retirer des fonds</h2>
+${!isWithdrawalOpen()?`<div class="hour-box">⚠️ Les retraits sont fermés.<br>Horaires : 10h00 – 23h12</div>`:''}
+<div class="card">
+  <p class="mu">Solde actuel : <b>${F((ud||{}).bal)}</b></p>
+  <label>Montant à retirer (Min: 1 000 F)</label>
+  <input id="a" type="number" placeholder="Ex: 5000">
+  <label>Numéro de réception (Mobile Money)</label>
+  <input id="pn" type="tel" placeholder="Ex: 0700000000">
+  <div id="err" class="err"></div>
+  <button class="btn" ${!isWithdrawalOpen()?'disabled':''} onclick="prepareWithdrawal()">Demander le retrait</button>
+</div>`,
+
+histRec:()=>`${back()}<h2>Historique des Rechargements</h2>`+hist(recs,"Aucun rechargement trouvé."),
+histRet:()=>`${back()}<h2>Historique des Retraits</h2>`+hist(rets,"Aucun retrait trouvé."),
+
+profile:()=>{const u=U();return`<h2>Mon Profil</h2>
+<div class="card">
+  <p><b>Nom :</b> ${esc(u.name)}</p>
+  <p><b>Téléphone :</b> ${esc(u.phone)}</p>
+  <p><b>Solde :</b> ${F(u.bal)}</p>
+</div>
+<div class="card">
+  <button class="btn sec" style="margin-bottom:8px" onclick="go('achats')">📦 Mes Achats</button>
+  <button class="btn sec" style="margin-bottom:8px" onclick="go('histRec')">📜 Historique Recharges</button>
+  <button class="btn sec" style="margin-bottom:8px" onclick="go('histRet')">📜 Historique Retraits</button>
+  <button class="btn out" onclick="logout()">Se déconnecter</button>
+</div>`}
+};
+
+function renderNav(){
+  const nav = document.getElementById("nav");
+  if(!auth.currentUser || P === "signup" || P === "login"){
+    nav.innerHTML = "";
+    return;
+  }
+  nav.innerHTML = `
+    <button class="${P==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Accueil</button>
+    <button class="${P==='invest'?'on':''}" onclick="go('invest')"><span>📈</span>Investir</button>
+    <button class="${P==='achats'?'on':''}" onclick="go('achats')"><span>📦</span>Achats</button>
+    <button class="${P==='profile'?'on':''}" onclick="go('profile')"><span>👤</span>Profil</button>
+  `;
+}
+
+function render(){
+  const appEl = document.getElementById("app");
+  if(loading){
+    appEl.innerHTML = `<div style="text-align:center;padding:40px"><p class="mu">Chargement...</p></div>`;
+    renderNav();
+    return;
+  }
+  const pageFn = pages[P] || pages.home;
+  appEl.innerHTML = pageFn();
+  renderNav();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  unsubs.forEach(u => u());
+  unsubs = [];
+  
+  if(user){
+    loading = true;
+    render();
+    
+    // User doc snapshot
+    const uUnsub = onSnapshot(doc(fs, "users", user.uid), (snap) => {
+      if(snap.exists()){
+        ud = { id: snap.id, ...snap.data() };
+      }
+      loading = false;
+      if(P === "login" || P === "signup") P = "home";
+      render();
+    });
+    
+    // Purchases snapshot
+    const qBuys = query(collection(fs, "purchases"), where("uid", "==", user.uid));
+    const bUnsub = onSnapshot(qBuys, (snap) => {
+      buys = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    });
+    
+    // Recharges snapshot
+    const qRecs = query(collection(fs, "recharges"), where("uid", "==", user.uid));
+    const rUnsub = onSnapshot(qRecs, (snap) => {
+      recs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>b.ts-a.ts);
+      render();
+    });
+    
+    // Withdrawals snapshot
+    const qRets = query(collection(fs, "withdrawals"), where("uid", "==", user.uid));
+    const wUnsub = onSnapshot(qRets, (snap) => {
+      rets = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>b.ts-a.ts);
+      render();
+    });
+    
+    unsubs.push(uUnsub, bUnsub, rUnsub, wUnsub);
+  } else {
+    ud = null; buys = []; recs = []; rets = [];
+    loading = false;
+    P = "login";
+    render();
+  }
+});
+</script>
+</body>
+</html>
