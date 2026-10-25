@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8">
+<html lang="fr">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Avenir Capital</title>
 <style>
-:root{--bg:#f3f6f4;--card:#fff;--tx:#14231c;--mu:#667a70;--pr:#0b7a4b;--pr2:#e3f4ec;--bd:#dde6e1;--wa:#1dc4ff;--er:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#f3f6f4;--card:#fff;--tx:#14231c;--mu:#667a70;--pr:#0b7a4b;--pr2:#e3f4ec;--bd:#dde6e1;--wa:#10b981;--er:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1713;--card:#18231d;--tx:#e8f1ec;--mu:#92a79b;--pr:#2fc283;--pr2:#183328;--bd:#27382f}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 #app{max-width:480px;margin:auto;padding:16px}
@@ -11,11 +13,13 @@ h1,h2{margin:0 0 12px}h2{font-size:20px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
 .hero{background:var(--pr);color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
 .hero small{opacity:.85}.hero b{display:block;font-size:30px}
+.reclamer-box{background:var(--pr2);border:2px solid var(--pr);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
 input,select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
 label{font-size:13px;color:var(--mu)}
 button{font:inherit;cursor:pointer}
 .btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--pr);color:#fff;font-weight:600;text-decoration:none;display:inline-block;text-align:center}
 .btn.sec{background:var(--pr2);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
+.btn-sm{width:auto;padding:10px 20px;font-size:15px;border-radius:8px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .grid button{padding:16px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -30,7 +34,9 @@ nav span{display:block;font-size:20px}
 .wave{border:2px solid var(--wa)}.off{opacity:.55}
 .num{font-size:22px;font-weight:700;letter-spacing:1px}
 .prod-img{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:10px}
-</style></head><body><div id="app"></div><nav id="nav"></nav>
+</style>
+</head>
+<body><div id="app"></div><nav id="nav"></nav>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -46,7 +52,6 @@ const SUPPORT="https://wa.me/message/ABZ2BRFJPVIOE1";
 const PAY_LINK="https://pay.jeko.africa/pl/4f580acc-5df9-440e-b168-6beb65823bea";
 const DEFAULT_REF="GTHZS";
 
-// Nouveaux plans d'investissement avec images de sacs
 const VIP=[
   {n:"VIP1 Sac Découverte", p:5000, d:500, days:7, total:8500, benef:3500, img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80"},
   {n:"VIP2 Sac Essentiel", p:10000, d:1000, days:15, total:25000, benef:15000, img:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80"},
@@ -62,29 +67,61 @@ const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
 let ud=null,recs=[],rets=[],buys=[],teamN=0,unsubs=[],loading=true,P="signup",T={};
 const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
-const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleString("fr-FR");
+const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n||0).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleDateString("fr-FR");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id).value.trim();
+
 function go(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)}
 function err(m){const e=document.getElementById("err");if(e)e.textContent=m}
 const msg=e=>({"auth/email-already-in-use":"Ce numéro est déjà inscrit.","auth/invalid-credential":"Numéro ou mot de passe incorrect.","auth/weak-password":"Mot de passe : 6 caractères minimum."}[e.code]||("Erreur : "+(e.code||e.message)));
 const back=(p="home")=>`<button class="back" onclick="go('${p}')">‹ Retour</button>`;
 const hist=(a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
 
+window.copyN = function(num){
+  navigator.clipboard.writeText(num).then(()=>alert("✅ Numéro copié !")).catch(()=>alert(num))
+};
+
 const pages={
 signup:()=>`<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p><div class="card"><label>Nom complet</label><input id="n"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><label>Code d’invitation (facultatif)</label><input id="rf" value="${DEFAULT_REF}"><div id="err" class="err"></div><button class="btn" onclick="signup()">S’inscrire</button></div><button class="btn sec" onclick="go('login')">J’ai déjà un compte</button>`,
 login:()=>`<h1>Avenir Capital</h1><div class="card"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><div id="err" class="err"></div><button class="btn" onclick="login()">Se connecter</button></div><button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
-home:()=>{const u=U();return`<h2>Bonjour ${esc(u.name)} 👋</h2><div class="hero"><small>Solde disponible</small><b>${F(u.bal)}</b></div><div class="grid"><button onclick="go('recharge')">➕<br>Recharger</button><button onclick="go('withdraw')">💸<br>Retirer</button><button onclick="go('invest')">📈<br>Investir</button><button onclick="go('account')">👤<br>Compte</button></div><button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button><button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button><button class="li" onclick="go('service')">Service client <span>›</span></button>`},
+
+home:()=>{
+  const u=U();
+  return`
+    <h2>Bonjour ${esc(u.name)} 👋</h2>
+    <div class="hero">
+      <small>Solde disponible</small>
+      <b>${F(u.bal)}</b>
+    </div>
+    
+    <div class="reclamer-box">
+      <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Mes gains journaliers</h3>
+      <p class="mu" style="margin:0 0 12px 0">Cliquez pour récupérer vos gains des sacs actifs</p>
+      <button class="btn btn-sm" onclick="reclamerMesGains()">Réclamer mes gains</button>
+      <div id="gain-msg" class="err" style="margin-top:8px"></div>
+    </div>
+
+    <div class="grid">
+      <button onclick="go('recharge')">➕<br>Recharger</button>
+      <button onclick="go('withdraw')">💸<br>Retirer</button>
+      <button onclick="go('invest')">📈<br>Investir</button>
+      <button onclick="go('account')">👤<br>Compte</button>
+    </div>
+    <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
+    <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
+    <button class="li" onclick="go('service')">Service client <span>›</span></button>
+  `;
+},
 
 invest:()=>`<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
   <img src="${v.img}" alt="${v.n}" class="prod-img">
   <div class="row"><b>${v.n}</b><b>${F(v.p)}</b></div>
-  <p class="mu">Capital : ${F(v.p)} (${v.days} jours)<br>Revenu journalier (auto) : ${F(v.d)}<br>Bénéfice total : ${F(v.benef)}<br><b>Gain total estimé : ${F(v.total)}</b></p>
+  <p class="mu">Capital : ${F(v.p)} (${v.days} jours)<br>Revenu journalier : ${F(v.d)}<br>Bénéfice total : ${F(v.benef)}<br><b>Gain total estimé : ${F(v.total)}</b></p>
   <button class="btn" onclick="buy(${i})">Acheter ce sac</button>
 </div>`).join("")+`<div id="err" class="err"></div>`,
 
 achats:()=>{const b=U().buys;return`<h2>Mes achats</h2>`+(b.length?b.map(x=>`<div class="card">
-  <div class="row"><b>${x.n}</b><span class="tag" style="background:var(--pr2);color:var(--pr)">Actif (Revenu Auto)</span></div>
+  <div class="row"><b>${x.n}</b><span class="tag" style="background:var(--pr2);color:var(--pr)">Actif</span></div>
   <div class="mu">Investi : ${F(x.p)} · ${F(x.d)}/jour · ${x.days} jours<br>Acheté le ${x.t}</div>
 </div>`).join(""):`<p class="mu">Aucun achat pour le moment.</p>`)},
 
@@ -96,7 +133,7 @@ method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant
   `<button class="li wave" onclick="go('payWave')"><b>Wave</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #ffcc00;" onclick="go('payMTN')"><b>MTN Money</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`+
-  `<button class="li off" onclick="err('Orange Money est actuellement indisponible. Veuillez utiliser Wave, MTN ou Moov.')"><b>Orange Money</b><span>Indisponible</span></button>`+
+  `<button class="li off" onclick="err('Orange Money est actuellement indisponible.')"><b>Orange Money</b><span>Indisponible</span></button>`+
   `<div id="err" class="err"></div>`,
 
 payWave:()=>`${back("method")}<h2>Paiement Wave</h2>
@@ -156,49 +193,69 @@ function render(){
  n.innerHTML=tabs.map(t=>`<button class="${t[0]==P?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
 }
 
-// Fonction qui distribue automatiquement le revenu quotidien chaque matin
-async function claimAutomatiqueRevenus(uid, userBal){
+// ✅ Fonction pour réclamer les gains manuellement
+window.reclamerMesGains = async function() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const msgEl = document.getElementById("gain-msg");
+  if (msgEl) msgEl.textContent = "";
+
   try {
-    const todayStr = new Date().toISOString().split('T')[0]; // Format AAA-MM-JJ
-    const qPurchases = query(collection(fs, "purchases"), where("uid", "==", uid));
+    const qPurchases = query(collection(fs, "purchases"), where("uid", "==", user.uid));
     const snap = await getDocs(qPurchases);
     
-    let gainTotalAjour = 0;
+    let gainTotal = 0;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
 
-    for (let documentDoc of snap.docs) {
-      const p = documentDoc.data();
-      const pId = documentDoc.id;
+    snap.docs.forEach(docSnap => {
+      const p = docSnap.data();
       const startDate = p.ts;
       const lastClaim = p.lastClaim || startDate;
-      
-      // Jours d'expiration du produit
       const maxDays = p.days || 31;
       const totalDaysActive = Math.floor((now - startDate) / oneDayMs);
 
       if (totalDaysActive < maxDays) {
-        // Nombre de jours impayés depuis le dernier claim
         const daysToPay = Math.floor((now - lastClaim) / oneDayMs);
         if (daysToPay >= 1) {
-          const gain = daysToPay * p.d;
-          gainTotalAjour += gain;
-          
-          // Mettre à jour la date du dernier paiement du produit
-          const newLastClaim = lastClaim + (daysToPay * oneDayMs);
-          await updateDoc(doc(fs, "purchases", pId), { lastClaim: newLastClaim });
+          gainTotal += (daysToPay * p.d);
         }
       }
+    });
+
+    if (gainTotal === 0) {
+      if (msgEl) msgEl.textContent = "Aucun gain disponible pour le moment. Revenez demain !";
+      return;
     }
 
-    if (gainTotalAjour > 0) {
-      const userRef = doc(fs, "users", uid);
-      await updateDoc(userRef, { bal: userBal + gainTotalAjour });
-    }
-  } catch(e) {
-    console.log("Erreur lors de la distribution automatique :", e);
+    // Mise à jour du solde et des dates de réclamation
+    await runTransaction(fs, async t => {
+      const userRef = doc(fs, "users", user.uid);
+      const userSnap = await t.get(userRef);
+      const currentBal = userSnap.data().bal || 0;
+
+      t.update(userRef, { bal: currentBal + gainTotal });
+      
+      for (let i = 0; i < snap.docs.length; i++) {
+        const pDoc = snap.docs[i];
+        const p = pDoc.data();
+        const lastClaim = p.lastClaim || p.ts;
+        const daysToPay = Math.floor((now - lastClaim) / oneDayMs);
+        if (daysToPay >= 1) {
+          const newLastClaim = lastClaim + (daysToPay * oneDayMs);
+          t.update(doc(fs, "purchases", pDoc.id), { lastClaim: newLastClaim });
+        }
+      }
+    });
+
+    alert(`✅ Succès ! ${F(gainTotal)} ajouté à votre solde !`);
+    render();
+  } catch (e) {
+    console.error(e);
+    if (msgEl) msgEl.textContent = "Erreur : " + e.message;
   }
-}
+};
 
 onAuthStateChanged(auth, u=>{
  unsubs.forEach(f=>f());unsubs=[];ud=null;recs=[];rets=[];buys=[];teamN=0;
@@ -206,7 +263,6 @@ onAuthStateChanged(auth, u=>{
  const L=(c,set)=>unsubs.push(onSnapshot(query(collection(fs,c),where("uid","==",u.uid)),s=>{set(s.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts));render()}));
  unsubs.push(onSnapshot(doc(fs,"users",u.uid),s=>{if(s.exists()){
   ud={...s.data(),id:u.uid};loading=false;
-  claimAutomatiqueRevenus(u.uid, ud.bal);
   if(!unsubs.team){unsubs.team=1;unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",DEFAULT_REF)),q=>{teamN=q.size;render()}))}
   render()}}));
  L("recharges",x=>recs=x);L("withdrawals",x=>rets=x);L("purchases",x=>buys=x);
@@ -237,19 +293,12 @@ async function buy(i){
         lastClaim:Date.now()
       });
     });
+    alert("✅ Investissement confirmé !");
     go("achats");
   }catch(e){err(e.message)}
 }
 
 function toMethod(){const a=+$("a");if(a<1000)return err("Montant minimum : 1 000 F.");T.amt=a;go("method")}
-function copyN(num){try{navigator.clipboard.writeText(num)}catch(e){}document.getElementById("cp").textContent="Copié ✓"}
-async function confirmPay(methodeName="Wave"){const p=$("pn"),t=$("tx");if(p.length<8||t.length<4)return err("Entrez votre numéro et l’ID de transaction.");
- try{await addDoc(collection(fs,"recharges"),{uid:auth.currentUser.uid,a:T.amt,m:methodeName+" · "+esc(p)+" · ID "+esc(t),t:D(),ts:Date.now(),s:"En attente"});go("histRec")}catch(e){err(msg(e))}}
-async function doWd(){const a=+$("a"),p=$("pn"),ref=doc(fs,"users",auth.currentUser.uid);if(a<1000)return err("Montant minimum : 1 000 F.");if(p.length<8)return err("Entrez votre numéro.");
- try{await runTransaction(fs,async t=>{const b=(await t.get(ref)).data().bal;if(b<a)throw{message:"Solde insuffisant."};
-  t.update(ref,{bal:b-a});t.set(doc(collection(fs,"withdrawals")),{uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"})});go("histRet")}catch(e){err(e.message)}}
-async function doLink(){const p=$("pn");if(p.length<8)return err("Entrez un numéro valide.");
- await setDoc(doc(fs,"users",auth.currentUser.uid),{card:{m:$("m"),num:p}},{merge:true});go("card")}
-Object.assign(window,{go,err,signup,login,logout,buy,toMethod,copyN,confirmPay,doWd,doLink});
-render();
-</script>
+async function confirmPay(mode){
+  const p=$("pn"),t=$("tx"),a=T.amt;
+  if(a<1000)return err("Montant mi
