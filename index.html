@@ -301,4 +301,29 @@ async function buy(i){
 function toMethod(){const a=+$("a");if(a<1000)return err("Montant minimum : 1 000 F.");T.amt=a;go("method")}
 async function confirmPay(mode){
   const p=$("pn"),t=$("tx"),a=T.amt;
-  if(a<1000)return err("Montant mi
+  if(a<1000)return err("Montant minimum : 1 000 F.");
+  if(p.length<8||t.length<4)return err("Entre ton numéro et l'ID de transaction.");
+  try{
+    await addDoc(collection(fs,"recharges"),{
+      uid:auth.currentUser.uid,a:a,m:mode+" · "+esc(p)+" · ID "+esc(t),t:D(),ts:Date.now(),s:"En attente"
+    });
+    alert("✅ Demande envoyée ! En attente de validation.");
+    go("histRec");
+  }catch(e){err("Erreur : "+e.message)}
+}
+async function doWd(){const a=+$("a"),p=$("pn"),ref=doc(fs,"users",auth.currentUser.uid);
+ if(a<1000)return err("Montant minimum : 1 000 F.");if(p.length<8)return err("Entre un numéro valide.");
+ try{await runTransaction(fs,async t=>{const b=(await t.get(ref)).data().bal;if(b<a)throw{message:"Solde insuffisant."};
+  t.update(ref,{bal:b-a});t.set(doc(collection(fs,"withdrawals")),{uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"})});
+  alert("✅ Demande de retrait envoyée !");
+  go("histRet")}catch(e){err(e.message)}}
+async function doLink(){const p=$("pn");if(p.length<8)return err("Entre un numéro valide.");
+ await updateDoc(doc(fs,"users",auth.currentUser.uid),{card:{m:$("m"),num:p}},{merge:true});
+ alert("✅ Compte lié avec succès !");
+ go("card")}
+
+Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink});
+render();
+</script>
+</body>
+</html>
