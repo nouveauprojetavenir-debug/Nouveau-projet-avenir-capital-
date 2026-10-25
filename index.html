@@ -5,30 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Avenir Capital</title>
 <style>
-:root{--bg:#f3f6f4;--card:#fff;--tx:#14231c;--mu:#667a70;--pr:#0b7a4b;--pr2:#e3f4ec;--bd:#dde6e1;--wa:#10b981;--er:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1713;--card:#18231d;--tx:#e8f1ec;--mu:#92a79b;--pr:#2fc283;--pr2:#183328;--bd:#27382f}}
+:root{--bg:#0a1a12;--card:#132e21;--tx:#f8fafc;--mu:#a3b8af;--pr:#10b981;--pr2:#059669;--bd:#1e4632;--wa:#10b981;--er:#ef4444;--gold:#f59e0b;--red:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1a12;--card:#132e21;--tx:#f8fafc;--mu:#a3b8af;--pr:#10b981;--pr2:#059669;--bd:#1e4632}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 #app{max-width:480px;margin:auto;padding:16px}
 h1,h2{margin:0 0 12px}h2{font-size:20px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
-.hero{background:var(--pr);color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
+.hero{background:linear-gradient(135deg,var(--red),var(--pr));color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
 .hero small{opacity:.85}.hero b{display:block;font-size:30px}
-.reclamer-box{background:var(--pr2);border:2px solid var(--pr);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
+.reclamer-box{background:rgba(16, 185, 129, 0.1);border:2px solid var(--pr);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
 input,select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
 label{font-size:13px;color:var(--mu)}
 button{font:inherit;cursor:pointer}
 .btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--pr);color:#fff;font-weight:600;text-decoration:none;display:inline-block;text-align:center}
-.btn.sec{background:var(--pr2);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
+.btn.sec{background:rgba(16,185,129,0.15);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff}
 .btn-sm{width:auto;padding:10px 20px;font-size:15px;border-radius:8px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .grid button{padding:16px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .li{display:flex;justify-content:space-between;width:100%;padding:14px;margin-bottom:8px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);text-align:left}
-.tag{font-size:12px;padding:3px 9px;border-radius:20px;background:#fff3cd;color:#7a5b00}
+.tag{font-size:12px;padding:3px 9px;border-radius:20px;background:rgba(245, 158, 11, 0.2);color:var(--gold)}
 .mu{color:var(--mu);font-size:14px}.err{color:var(--er);font-size:14px;min-height:20px;margin:-4px 0 8px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.chips button{padding:8px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
 .back{background:none;border:0;color:var(--pr);padding:0 0 10px;font-weight:600}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:100}
 nav button{flex:1;padding:12px 2px;border:0;background:none;color:var(--mu);font-size:12px}nav button.on{color:var(--pr);font-weight:700}
 nav span{display:block;font-size:20px}
 .wave{border:2px solid var(--wa)}.off{opacity:.55}
@@ -42,7 +43,6 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,setDoc,onSnapshot,collection,query,where,addDoc,runTransaction,updateDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* Config Firebase du projet avenir-capital */
 const firebaseConfig={apiKey:"AIzaSyC8jUCtIrHrySXzNAXTdRTaCBTNgEirS8w",authDomain:"avenir-capital.firebaseapp.com",projectId:"avenir-capital",storageBucket:"avenir-capital.firebasestorage.app",messagingSenderId:"565430762059",appId:"1:565430762059:web:3c7d536d55d3277d35ebce"};
 
 const WAVE_NUM="0171518903";
@@ -50,7 +50,7 @@ const MOOV_NUM="0104217547";
 const MTN_NUM="0545576710";
 const SUPPORT="https://wa.me/message/ABZ2BRFJPVIOE1";
 const PAY_LINK="https://pay.jeko.africa/pl/4f580acc-5df9-440e-b168-6beb65823bea";
-const DEFAULT_REF="GTHZS";
+const BASE_REF_LINK="https://nouveauprojetavenir-debug.github.io/Nouveau-projet-avenir-capital-/";
 
 const VIP=[
   {n:"VIP1 Sac Découverte", p:5000, d:500, days:7, total:8500, benef:3500, img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80"},
@@ -65,11 +65,17 @@ const VIP=[
 const METH=["Wave","MTN Money","Moov Money","Orange Money"];
 const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
-let ud=null,recs=[],rets=[],buys=[],teamN=0,unsubs=[],loading=true,P="signup",T={};
+let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="signup",T={};
+
 const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
 const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n||0).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleDateString("fr-FR");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id).value.trim();
+
+function getUrlParam(param){
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
 
 function go(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)}
 function err(m){const e=document.getElementById("err");if(e)e.textContent=m}
@@ -81,12 +87,30 @@ window.copyN = function(num){
   navigator.clipboard.writeText(num).then(()=>alert("✅ Numéro copié !")).catch(()=>alert(num))
 };
 
+window.copyLink = function(link){
+  navigator.clipboard.writeText(link).then(()=>alert("✅ Lien de parrainage copié !")).catch(()=>alert(link))
+};
+
 const pages={
-signup:()=>`<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p><div class="card"><label>Nom complet</label><input id="n"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><label>Code d’invitation (facultatif)</label><input id="rf" value="${DEFAULT_REF}"><div id="err" class="err"></div><button class="btn" onclick="signup()">S’inscrire</button></div><button class="btn sec" onclick="go('login')">J’ai déjà un compte</button>`,
+signup:()=>{
+  const refCode = getUrlParam('ref') || '';
+  return `<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p>
+  <div class="card">
+    <label>Nom complet</label><input id="n">
+    <label>Numéro de téléphone</label><input id="ph" type="tel">
+    <label>Mot de passe</label><input id="pw" type="password">
+    <label>Code d’invitation (parrain)</label><input id="rf" value="${esc(refCode)}">
+    <div id="err" class="err"></div>
+    <button class="btn" onclick="signup()">S’inscrire</button>
+  </div>
+  <button class="btn sec" onclick="go('login')">J’ai déjà un compte</button>`;
+},
 login:()=>`<h1>Avenir Capital</h1><div class="card"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><div id="err" class="err"></div><button class="btn" onclick="login()">Se connecter</button></div><button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
 
 home:()=>{
   const u=U();
+  const myRefCode = u.phone || "";
+  const fullRefLink = BASE_REF_LINK + "?ref=" + myRefCode;
   return`
     <h2>Bonjour ${esc(u.name)} 👋</h2>
     <div class="hero">
@@ -95,18 +119,26 @@ home:()=>{
     </div>
     
     <div class="reclamer-box">
-      <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Mes gains journaliers</h3>
-      <p class="mu" style="margin:0 0 12px 0">Cliquez pour récupérer vos gains des sacs actifs</p>
+      <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Gains Journaliers</h3>
+      <p class="mu" style="margin:0 0 12px 0">Récupérez vos revenus des sacs actifs chaque jour en FCFA</p>
       <button class="btn btn-sm" onclick="reclamerMesGains()">Réclamer mes gains</button>
       <div id="gain-msg" class="err" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" style="border: 2px dashed var(--gold); text-align:center;">
+      <h3 style="color:var(--gold); margin-top:0;">🎡 Roue de la Fortune</h3>
+      <p class="mu">Tentez de remporter jusqu'à <b>400 000 F</b> de bonus instantané !</p>
+      <button class="btn btn-gold" onclick="go('roue')">Jouer à la Roue</button>
     </div>
 
     <div class="grid">
       <button onclick="go('recharge')">➕<br>Recharger</button>
       <button onclick="go('withdraw')">💸<br>Retirer</button>
       <button onclick="go('invest')">📈<br>Investir</button>
-      <button onclick="go('account')">👤<br>Compte</button>
+      <button onclick="go('roue')">🎡<br>Roue Bonus</button>
     </div>
+    <button class="li" onclick="go('team')">👥 Mon équipe & Parrainage <span>›</span></button>
+    <button class="li" onclick="go('adminUsers')">📋 Liste des membres inscrits <span>›</span></button>
     <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
     <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
     <button class="li" onclick="go('service')">Service client <span>›</span></button>
@@ -121,12 +153,48 @@ invest:()=>`<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
 </div>`).join("")+`<div id="err" class="err"></div>`,
 
 achats:()=>{const b=U().buys;return`<h2>Mes achats</h2>`+(b.length?b.map(x=>`<div class="card">
-  <div class="row"><b>${x.n}</b><span class="tag" style="background:var(--pr2);color:var(--pr)">Actif</span></div>
+  <div class="row"><b>${x.n}</b><span class="tag" style="background:rgba(16,185,129,0.2);color:var(--wa)">Actif</span></div>
   <div class="mu">Investi : ${F(x.p)} · ${F(x.d)}/jour · ${x.days} jours<br>Acheté le ${x.t}</div>
 </div>`).join(""):`<p class="mu">Aucun achat pour le moment.</p>`)},
 
-team:()=>{const u=U(),n=teamN;return`<h2>Mon équipe</h2><div class="card"><p class="mu">Votre code d’invitation</p><div class="num">${DEFAULT_REF}</div><p class="mu">Membres invités : <b>${n}</b></p></div>`},
-account:()=>{const u=U();return`<h2>Mon compte</h2><div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(me.phone)} · Solde ${F(u.bal)}</div></div>`+[["histRec","Historique des recharges"],["histRet","Historique des retraits"],["achats","Mes achats"],["team","Équipe"],["link","Lier mon compte de retrait"],["card","Ma carte bancaire"],["service","Service client"]].map(x=>`<button class="li" onclick="go('${x[0]}')">${x[1]} <span>›</span></button>`).join("")+`<button class="btn out" onclick="logout()">Se déconnecter</button>`},
+team:()=>{
+  const u=U();
+  const myRefCode = u.phone || "";
+  const fullRefLink = BASE_REF_LINK + "?ref=" + myRefCode;
+  return `<h2>Mon équipe</h2>
+  <div class="card">
+    <p class="mu">Votre lien de parrainage personnel :</p>
+    <input type="text" readonly value="${fullRefLink}" id="refLinkInput" style="font-size:12px;background:var(--bg);">
+    <button class="btn sec" onclick="copyLink('${fullRefLink}')">Copier le lien</button>
+    <p class="mu" style="margin-top:12px;">Gagnez <b>600 F</b> lorsque vos filleuls effectuent leur première recharge !</p>
+    <hr style="border-color:var(--bd);margin:12px 0">
+    <p class="mu">Membres invités dans votre équipe : <b>${teamN}</b></p>
+  </div>`;
+},
+
+adminUsers:()=>{
+  return `<h2>Membres Inscrits (${allUsers.length})</h2>
+  <p class="mu">Liste globale de tous les utilisateurs enregistrés sur la plateforme :</p>
+  ${allUsers.length ? allUsers.map(usr => `
+    <div class="card">
+      <div class="row"><b>${esc(usr.name || 'Utilisateur')}</b><span class="tag">${F(usr.bal || 0)}</span></div>
+      <div class="mu">Téléphone : ${esc(usr.phone || 'N/A')}<br>Parrain : ${esc(usr.ref || 'Aucun')}<br>Inscrit le : ${new Date(usr.ts || Date.now()).toLocaleDateString("fr-FR")}</div>
+    </div>
+  `).join("") : `<p class="mu">Aucun membre trouvé.</p>`}
+  <button class="btn sec" onclick="go('home')">Retour à l'accueil</button>`;
+},
+
+roue:()=>{
+  return `<h2>Roue de la Fortune 🎡</h2>
+  <div class="card" style="text-align:center;">
+    <p class="mu">Tentez votre chance et gagnez de grosses sommes directement sur votre solde !</p>
+    <div id="roue-result" style="font-size:22px; font-weight:bold; color:var(--gold); margin: 20px 0;">🎁 Gros lots : 150.000F, 200.000F, 350.000F, 400.000F</div>
+    <button class="btn btn-gold" onclick="tournerRoue()" id="btnRoue">Tourner la roue</button>
+  </div>
+  <button class="btn sec" onclick="go('home')">Retour à l'accueil</button>`;
+},
+
+account:()=>{const u=U();return`<h2>Mon compte</h2><div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(me.phone)} · Solde ${F(u.bal)}</div></div>`+[["team","Équipe & Parrainage"],["adminUsers","Liste des membres"],["histRec","Historique des recharges"],["histRet","Historique des retraits"],["achats","Mes achats"],["link","Lier mon compte de retrait"],["card","Ma carte bancaire"],["service","Service client"]].map(x=>`<button class="li" onclick="go('${x[0]}')">${x[1]} <span>›</span></button>`).join("")+`<button class="btn out" onclick="logout()">Se déconnecter</button>`},
 recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric" value="${T.amt||""}"><div class="chips">${[5000,10000,50000,100000].map(v=>`<button onclick="a.value=${v}">${v.toLocaleString("fr-FR")}</button>`).join("")}</div><div id="err" class="err"></div><button class="btn" onclick="toMethod()">Confirmer</button></div>`,
 
 method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+
@@ -193,7 +261,40 @@ function render(){
  n.innerHTML=tabs.map(t=>`<button class="${t[0]==P?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
 }
 
-// ✅ Fonction pour réclamer les gains manuellement
+// 🎡 Roue de la fortune avec grosses sommes et crédit automatique
+window.tournerRoue = async function() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const resEl = document.getElementById("roue-result");
+  const btnEl = document.getElementById("btnRoue");
+  if(btnEl) btnEl.disabled = true;
+
+  // Gros lots demandés
+  const gainsPossibles = [50000, 100000, 150000, 200000, 350000, 400000];
+  const gagne = gainsPossibles[Math.floor(Math.random() * gainsPossibles.length)];
+
+  if(resEl) resEl.textContent = "🌀 La roue tourne vers un gros lot...";
+
+  setTimeout(async () => {
+    try {
+      // Crédit automatique immédiat dans Firestore
+      await runTransaction(fs, async t => {
+        const userRef = doc(fs, "users", user.uid);
+        const userSnap = await t.get(userRef);
+        const currentBal = userSnap.data().bal || 0;
+        t.update(userRef, { bal: currentBal + gagne });
+      });
+      if(resEl) resEl.textContent = `🎉 Jackpot ! Vous avez gagné ${F(gagne)} crédités !`;
+      alert(`🎉 Incroyable ! ${F(gagne)} ont été ajoutés directement à votre solde.`);
+      render();
+    } catch(e) {
+      if(resEl) resEl.textContent = "Erreur lors du crédit.";
+      if(btnEl) btnEl.disabled = false;
+    }
+  }, 1500);
+};
+
+// ✅ Réclamation automatique des gains journaliers en FCFA selon les jours
 window.reclamerMesGains = async function() {
   const user = auth.currentUser;
   if (!user) return;
@@ -225,11 +326,10 @@ window.reclamerMesGains = async function() {
     });
 
     if (gainTotal === 0) {
-      if (msgEl) msgEl.textContent = "Aucun gain disponible pour le moment. Revenez demain !";
+      if (msgEl) msgEl.textContent = "Aucun gain journalier disponible pour l'instant. Revenez demain !";
       return;
     }
 
-    // Mise à jour du solde et des dates de réclamation
     await runTransaction(fs, async t => {
       const userRef = doc(fs, "users", user.uid);
       const userSnap = await t.get(userRef);
@@ -249,7 +349,7 @@ window.reclamerMesGains = async function() {
       }
     });
 
-    alert(`✅ Succès ! ${F(gainTotal)} ajouté à votre solde !`);
+    alert(`✅ Succès ! ${F(gainTotal)} ont été ajoutés à votre solde.`);
     render();
   } catch (e) {
     console.error(e);
@@ -260,18 +360,42 @@ window.reclamerMesGains = async function() {
 onAuthStateChanged(auth, u=>{
  unsubs.forEach(f=>f());unsubs=[];ud=null;recs=[];rets=[];buys=[];teamN=0;
  if(!u){loading=false;P="login";render();return}
+ 
  const L=(c,set)=>unsubs.push(onSnapshot(query(collection(fs,c),where("uid","==",u.uid)),s=>{set(s.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts));render()}));
+ 
  unsubs.push(onSnapshot(doc(fs,"users",u.uid),s=>{if(s.exists()){
   ud={...s.data(),id:u.uid};loading=false;
-  if(!unsubs.team){unsubs.team=1;unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",DEFAULT_REF)),q=>{teamN=q.size;render()}))}
+  
+  if(!unsubs.team){
+    unsubs.team=1;
+    unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",ud.phone || "")),q=>{teamN=q.size;render()}))
+  }
   render()}}));
+
+ unsubs.push(onSnapshot(collection(fs,"users"),s=>{
+   allUsers = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>b.ts-a.ts);
+   render();
+ }));
+
  L("recharges",x=>recs=x);L("withdrawals",x=>rets=x);L("purchases",x=>buys=x);
 });
 
-async function signup(){const n=$("n"),p=$("ph"),w=$("pw"),r=$("rf");
- if(!n||p.length<8||w.length<6)return err("Remplissez tous les champs (mot de passe : 6 caractères minimum).");
- try{const c=await createUserWithEmailAndPassword(auth,em(p),w);
-  await setDoc(doc(fs,"users",c.user.uid),{name:n,phone:p,bal:0,ref:r||DEFAULT_REF,card:null,ts:Date.now()})}catch(e){err(msg(e))}}
+async function signup(){
+  const n=$("n"),p=$("ph"),w=$("pw"),r=$("rf");
+  if(!n||p.length<8||w.length<6)return err("Remplissez tous les champs (mot de passe : 6 caractères minimum).");
+  try{
+    const c=await createUserWithEmailAndPassword(auth,em(p),w);
+    await setDoc(doc(fs,"users",c.user.uid),{
+      name:n,
+      phone:p,
+      bal:0,
+      ref:r || "",
+      card:null,
+      ts:Date.now()
+    });
+  }catch(e){err(msg(e))}
+}
+
 async function login(){try{await signInWithEmailAndPassword(auth,em($("ph")),$("pw"))}catch(e){err(msg(e))}}
 function logout(){signOut(auth)}
 
@@ -299,30 +423,62 @@ async function buy(i){
 }
 
 function toMethod(){const a=+$("a");if(a<1000)return err("Montant minimum : 1 000 F.");T.amt=a;go("method")}
+
 async function confirmPay(mode){
   const p=$("pn"),t=$("tx"),a=T.amt;
   if(a<1000)return err("Montant minimum : 1 000 F.");
   if(p.length<8||t.length<4)return err("Entre ton numéro et l'ID de transaction.");
   try{
+    const userSnap = await getDocs(query(collection(fs, "recharges"), where("uid", "==", auth.currentUser.uid)));
+    const isFirstRecharge = userSnap.empty;
+
     await addDoc(collection(fs,"recharges"),{
       uid:auth.currentUser.uid,a:a,m:mode+" · "+esc(p)+" · ID "+esc(t),t:D(),ts:Date.now(),s:"En attente"
     });
+
+    if(isFirstRecharge && ud && ud.ref) {
+      const parrainQuery = query(collection(fs, "users"), where("phone", "==", ud.ref));
+      const parrainSnap = await getDocs(parrainQuery);
+      if(!parrainSnap.empty) {
+        const parrainDocSnap = parrainSnap.docs[0];
+        const parrainRef = doc(fs, "users", parrainDocSnap.id);
+        await runTransaction(fs, async tr => {
+          const pData = (await tr.get(parrainRef)).data();
+          tr.update(parrainRef, { bal: (pData.bal || 0) + 600 });
+        });
+      }
+    }
+
     alert("✅ Demande envoyée ! En attente de validation.");
     go("histRec");
   }catch(e){err("Erreur : "+e.message)}
 }
-async function doWd(){const a=+$("a"),p=$("pn"),ref=doc(fs,"users",auth.currentUser.uid);
- if(a<1000)return err("Montant minimum : 1 000 F.");if(p.length<8)return err("Entre un numéro valide.");
- try{await runTransaction(fs,async t=>{const b=(await t.get(ref)).data().bal;if(b<a)throw{message:"Solde insuffisant."};
-  t.update(ref,{bal:b-a});t.set(doc(collection(fs,"withdrawals")),{uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"})});
-  alert("✅ Demande de retrait envoyée !");
-  go("histRet")}catch(e){err(e.message)}}
-async function doLink(){const p=$("pn");if(p.length<8)return err("Entre un numéro valide.");
- await updateDoc(doc(fs,"users",auth.currentUser.uid),{card:{m:$("m"),num:p}},{merge:true});
- alert("✅ Compte lié avec succès !");
- go("card")}
 
-Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink});
+async function doWd(){
+  const a=+$("a"),p=$("pn"),ref=doc(fs,"users",auth.currentUser.uid);
+  if(a<1000)return err("Montant minimum : 1 000 F.");
+  if(p.length<8)return err("Entre un numéro valide.");
+  try{
+    await runTransaction(fs,async t=>{
+      const b=(await t.get(ref)).data().bal;
+      if(b<a)throw{message:"Solde insuffisant."};
+      t.update(ref,{bal:b-a});
+      t.set(doc(collection(fs,"withdrawals")),{uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"})
+    });
+    alert("✅ Demande de retrait envoyée !");
+    go("histRet");
+  }catch(e){err(e.message)}
+}
+
+async function doLink(){
+  const p=$("pn");
+  if(p.length<8)return err("Entre un numéro valide.");
+  await updateDoc(doc(fs,"users",auth.currentUser.uid),{card:{m:$("m"),num:p}},{merge:true});
+  alert("✅ Compte lié avec succès !");
+  go("card");
+}
+
+Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink,tournerRoue,reclamerMesGains});
 render();
 </script>
 </body>
