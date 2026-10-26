@@ -325,6 +325,18 @@ window.doWd = async function(){
   } catch(e) { err(e.message); }
 };
 
+window.doLink = async function(){
+  const user = auth.currentUser;
+  if(!user) return;
+  const m = $('m'), num = $('pn');
+  if(!num) return err("Entrez un numéro valide.");
+  try {
+    await updateDoc(doc(fs, "users", user.uid), { card: { m, num } });
+    alert("✅ Compte de retrait lié avec succès !");
+    go("home");
+  } catch(e) { err(e.message); }
+};
+
 const pages={
   signup:()=>{
     const refCode = getUrlParam('ref') || '';
@@ -343,6 +355,7 @@ const pages={
 
   home:()=>{
     const u=U();
+    const cardInfo = u.card ? `${u.card.m} - ${u.card.num}` : 'Aucun portefeuille lié';
     return`
       <h2>Bonjour ${esc(u.name)} 👋</h2>
       <div class="hero">
@@ -373,11 +386,16 @@ const pages={
         <button onclick="go('invest')">📈<br>Investir</button>
         <button onclick="go('team')">👥<br>Parrainage</button>
       </div>
+      <button class="li" onclick="go('card')">💳 Portefeuille de retrait (${cardInfo}) <span>›</span></button>
       <button class="li" onclick="go('team')">👥 Mon équipe & Parrainage <span>›</span></button>
       <button class="li" onclick="go('achats')">📦 Mes sacs achetés <span>›</span></button>
       <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
       <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
       <button class="li" onclick="go('service')">Service client <span>›</span></button>
+
+      <div style="margin-top: 24px; margin-bottom: 20px;">
+        <button class="btn out" onclick="logout()">Se déconnecter</button>
+      </div>
     `;
   },
 
@@ -448,6 +466,23 @@ const pages={
     <button class="btn" onclick="doWd()">Valider le retrait</button>
   </div>`,
 
+  card:()=>{
+    const u = U();
+    const curM = u.card ? u.card.m : METH[0];
+    const curNum = u.card ? u.card.num : '';
+    return `${back()}<h2>Lier le Portefeuille de Retrait</h2>
+    <div class="card">
+      <label>Méthode de paiement</label>
+      <select id="m">
+        ${METH.map(m => `<option ${m===curM?'selected':''}>${m}</option>`).join("")}
+      </select>
+      <label>Numéro de compte / téléphone</label>
+      <input id="pn" type="tel" value="${curNum}" placeholder="Ex: 0700000000">
+      <div id="err" class="err"></div>
+      <button class="btn" onclick="doLink()">Enregistrer le portefeuille</button>
+    </div>`;
+  },
+
   team:()=>{
     const u = U();
     const refLink = BASE_REF_LINK + "?ref=" + (u.phone || "");
@@ -476,7 +511,7 @@ function render(){
     nav.innerHTML="";
     return;
   }
-  app.innerHTML=pages[P]?pages.html?pages[P]():pages[P]():pages.home();
+  app.innerHTML=pages[P]?pages[P]():pages.home();
   if(["home","invest","team","service"].includes(P)){
     nav.innerHTML=`
       <button class="${P==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Accueil</button>
