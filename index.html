@@ -203,7 +203,6 @@ window.reclamerMesGains = async function() {
   setTimeout(() => checkAndUpdateButton(), 30000);
 };
 
-// Fonction modifiée : Applique le bonus et redirige immédiatement vers le support WhatsApp
 window.reclamerBonusPromo = async function() {
   const user = auth.currentUser;
   if (!user) return;
@@ -221,7 +220,7 @@ window.reclamerBonusPromo = async function() {
       t.update(uRef, { bal: curBal + montantRetraitPossible });
     });
 
-    const item = VIP[1]; // VIP2 Sac Essentiel (10000 F)
+    const item = VIP[1];
     const now = Date.now();
     await addDoc(collection(fs, "users", user.uid, "buys"), {
       n: item.n + " (Bonus Promo)", p: item.p, d: item.d, days: item.days,
@@ -229,8 +228,6 @@ window.reclamerBonusPromo = async function() {
     });
 
     alert("✅ Bonus de 71 000 F pris en compte ! Redirection vers le service client WhatsApp pour validation finale...");
-    
-    // Redirection automatique vers le lien WhatsApp du support
     window.location.href = SUPPORT;
   } catch (e) {
     if (msgEl) {
@@ -328,168 +325,196 @@ window.doWd = async function(){
   } catch(e) { err(e.message); }
 };
 
-window.doLink = async function(){
-  const user = auth.currentUser;
-  if(!user) return;
-  const m = $('m'), num = $('pn');
-  if(!num) return err("Entrez un numéro valide.");
-  try {
-    await updateDoc(doc(fs, "users", user.uid), { card: { m, num } });
-    alert("✅ Compte de retrait lié avec succès !");
-    go("card");
-  } catch(e) { err(e.message); }
-};
-
 const pages={
-signup:()=>{
-  const refCode = getUrlParam('ref') || '';
-  return `<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p>
-  <div class="card">
-    <label>Nom complet</label><input id="n">
-    <label>Numéro de téléphone</label><input id="ph" type="tel">
-    <label>Mot de passe</label><input id="pw" type="password">
-    <label>Code d'invitation (parrain)</label><input id="rf" value="${esc(refCode)}">
-    <div id="err" class="err"></div>
-    <button class="btn" onclick="signup()">S'inscrire</button>
-  </div>
-  <button class="btn sec" onclick="go('login')">J'ai déjà un compte</button>`;
-},
-login:()=>`<h1>Avenir Capital</h1><div class="card"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><div id="err" class="err"></div><button class="btn" onclick="login()">Se connecter</button></div><button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
-
-home:()=>{
-  const u=U();
-  const myRefCode = u.phone || "";
-  const fullRefLink = BASE_REF_LINK + "?ref=" + myRefCode;
-  return`
-    <h2>Bonjour ${esc(u.name)} 👋</h2>
-    <div class="hero">
-      <small>Solde disponible</small>
-      <b>${F(u.bal)}</b>
+  signup:()=>{
+    const refCode = getUrlParam('ref') || '';
+    return `<h1>Avenir Capital</h1><p class="mu">Créez votre compte pour commencer à investir.</p>
+    <div class="card">
+      <label>Nom complet</label><input id="n">
+      <label>Numéro de téléphone</label><input id="ph" type="tel">
+      <label>Mot de passe</label><input id="pw" type="password">
+      <label>Code d'invitation (parrain)</label><input id="rf" value="${esc(refCode)}">
+      <div id="err" class="err"></div>
+      <button class="btn" onclick="signup()">S'inscrire</button>
     </div>
-    
-    <div class="bonus-box">
-      <h3 style="color:var(--gold);margin:0 0 6px 0">🎁 Bonus Spécial 30 000 F</h3>
-      <p class="mu" style="margin:0 0 12px 0">Rechargez 30.000 F pour obtenir 71.000 F de bonus : Retirez 61.000 F et achetez vos produits avec les 10.000 F restants !</p>
-      <button class="btn btn-gold btn-sm" onclick="go('bonusPromo')">Obtenir le bonus</button>
-    </div>
+    <button class="btn sec" onclick="go('login')">J'ai déjà un compte</button>`;
+  },
+  login:()=>`<h1>Avenir Capital</h1><div class="card"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><div id="err" class="err"></div><button class="btn" onclick="login()">Se connecter</button></div><button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
 
-    <div class="reclamer-box">
-      <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Gains Journaliers</h3>
-      <p class="mu" style="margin:0 0 12px 0">Récupérez vos revenus des sacs actifs chaque jour en FCFA</p>
-      <button id="btn-reclamer" class="btn btn-sm" onclick="reclamerMesGains()" ${!hasGainsAvailable ? 'disabled' : ''}>
-        ${hasGainsAvailable ? '🔓 Réclamer mes gains' : '🔒 En attente...'}
-      </button>
-      <div id="gain-msg" class="err" style="margin-top:8px">
-        ${hasGainsAvailable ? '✨ Des gains sont disponibles !' : '⏰ Revenez demain matin pour réclamer'}
+  home:()=>{
+    const u=U();
+    return`
+      <h2>Bonjour ${esc(u.name)} 👋</h2>
+      <div class="hero">
+        <small>Solde disponible</small>
+        <b>${F(u.bal)}</b>
       </div>
-    </div>
+      
+      <div class="bonus-box">
+        <h3 style="color:var(--gold);margin:0 0 6px 0">🎁 Bonus Spécial 30 000 F</h3>
+        <p class="mu" style="margin:0 0 12px 0">Rechargez 30.000 F pour obtenir 71.000 F de bonus : Retirez 61.000 F et achetez vos produits avec les 10.000 F restants !</p>
+        <button class="btn btn-gold btn-sm" onclick="go('bonusPromo')">Obtenir le bonus</button>
+      </div>
 
-    <div class="grid">
-      <button onclick="go('recharge')">➕<br>Recharger</button>
-      <button onclick="go('withdraw')">💸<br>Retirer</button>
-      <button onclick="go('invest')">📈<br>Investir</button>
-      <button onclick="go('team')">👥<br>Parrainage</button>
-    </div>
-    <button class="li" onclick="go('team')">👥 Mon équipe & Parrainage <span>›</span></button>
-    <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
-    <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
-    <button class="li" onclick="go('service')">Service client <span>›</span></button>
-  `;
-},
+      <div class="reclamer-box">
+        <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Gains Journaliers</h3>
+        <p class="mu" style="margin:0 0 12px 0">Récupérez vos revenus des sacs actifs chaque jour en FCFA</p>
+        <button id="btn-reclamer" class="btn btn-sm" onclick="reclamerMesGains()" ${!hasGainsAvailable ? 'disabled' : ''}>
+          ${hasGainsAvailable ? '🔓 Réclamer mes gains' : '🔒 En attente...'}
+        </button>
+        <div id="gain-msg" class="err" style="margin-top:8px">
+          ${hasGainsAvailable ? '✨ Des gains sont disponibles !' : '⏰ Revenez demain matin pour réclamer'}
+        </div>
+      </div>
 
-bonusPromo:()=>`${back()}<h2>Bonus Spécial 30.000 F</h2>
-<div class="card" style="text-align:center;">
-  <p class="mu">Effectuez une recharge de <b>30 000 F</b> pour débloquer votre pack bonus exclusif :</p>
-  <ul style="text-align:left; color:var(--mu); font-size:14px; margin-bottom:16px;">
-    <li>Valeur totale du bonus : <b>71 000 F</b></li>
-    <li>Montant retirable : <b>61 000 F</b></li>
-    <li>Montant réinvesti (Produit) : <b>10 000 F</b></li>
-  </ul>
-  <div id="bonus-msg" class="err"></div>
-  <button class="btn btn-gold" onclick="reclamerBonusPromo()">Activer et contacter le Support</button>
-</div>`,
+      <div class="grid">
+        <button onclick="go('recharge')">➕<br>Recharger</button>
+        <button onclick="go('withdraw')">💸<br>Retirer</button>
+        <button onclick="go('invest')">📈<br>Investir</button>
+        <button onclick="go('team')">👥<br>Parrainage</button>
+      </div>
+      <button class="li" onclick="go('team')">👥 Mon équipe & Parrainage <span>›</span></button>
+      <button class="li" onclick="go('achats')">📦 Mes sacs achetés <span>›</span></button>
+      <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
+      <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
+      <button class="li" onclick="go('service')">Service client <span>›</span></button>
+    `;
+  },
 
-invest:()=>`<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
-  <img src="${v.img}" alt="${v.n}" class="prod-img">
-  <div class="row"><b>${v.n}</b><b>${F(v.p)}</b></div>
-  <p class="mu">Capital : ${F(v.p)} (${v.days} jours)<br>Revenu journalier : ${F(v.d)}<br>Bénéfice total : ${F(v.benef)}<br><b>Gain total estimé : ${F(v.total)}</b></p>
-  <button class="btn" onclick="buy(${i})">Acheter ce sac</button>
-</div>`).join("")+`<div id="err" class="err"></div>`,
+  bonusPromo:()=>`${back()}<h2>Bonus Spécial 30.000 F</h2>
+  <div class="card" style="text-align:center;">
+    <p class="mu">Effectuez une recharge de <b>30 000 F</b> pour débloquer votre pack bonus exclusif :</p>
+    <ul style="text-align:left; color:var(--mu); font-size:14px; margin-bottom:16px;">
+      <li>Valeur totale du bonus : <b>71 000 F</b></li>
+      <li>Montant retirable : <b>61 000 F</b></li>
+      <li>Montant réinvesti (Produit) : <b>10 000 F</b></li>
+    </ul>
+    <div id="bonus-msg" class="err"></div>
+    <button class="btn btn-gold" onclick="reclamerBonusPromo()">Activer et contacter le Support</button>
+  </div>`,
 
-achats:()=>{const b=U().buys;return`<h2>Mes achats</h2>`+(b.length?b.map(x=>`<div class="card">
-  <div class="row"><b>${x.n}</b><span class="tag" style="background:rgba(16,185,129,0.2);color:var(--wa)">${(x.daysPaid||0) >= x.days ? 'Terminé' : 'Actif'}</span></div>
-  <div class="mu">Investi : ${F(x.p)} · ${F(x.d)}/jour · Retiré: ${x.daysPaid||0}/${x.days} jours<br>Acheté le ${x.t}</div>
-</div>`).join(""):`<p class="mu">Aucun achat pour le moment.</p>`)},
+  invest:()=>`${back()}<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
+    <img src="${v.img}" alt="${v.n}" class="prod-img">
+    <div class="row"><b>${v.n}</b><b>${F(v.p)}</b></div>
+    <p class="mu">Capital : ${F(v.p)} (${v.days} jours)<br>Revenu journalier : ${F(v.d)}<br>Bénéfice total : ${F(v.benef)}<br><b>Gain total estimé : ${F(v.total)}</b></p>
+    <button class="btn" onclick="buy(${i})">Acheter ce sac</button>
+  </div>`).join("")+`<div id="err" class="err"></div>`,
 
-team:()=>{
-  const u=U();
-  const myRefCode = u.phone || "";
-  const fullRefLink = BASE_REF_LINK + "?ref=" + myRefCode;
-  return `<h2>Mon équipe</h2>
+  achats:()=>{
+    const u = U();
+    return `${back()}<h2>Mes Sacs Investis</h2>` + 
+      (u.buys && u.buys.length ? u.buys.map(b => `<div class="card">
+        <div class="row"><b>${b.n}</b><span class="tag">Actif</span></div>
+        <p class="mu">Acheté le : ${b.t}<br>Investissement : ${F(b.p)}<br>Revenu/jour : ${F(b.d)}<br>Jours payés : ${b.daysPaid || 0} / ${b.days}</p>
+      </div>`).join("") : `<p class="mu" style="text-align:center;">Vous n'avez pas encore acheté de sacs d'investissement.</p>`);
+  },
+
+  recharge:()=>`${back()}<h2>Recharger le compte</h2>
   <div class="card">
-    <p class="mu">Votre lien de parrainage personnel :</p>
-    <input type="text" readonly value="${fullRefLink}" id="refLinkInput" style="font-size:12px;background:var(--bg);">
-    <button class="btn sec" onclick="copyLink('${fullRefLink}')">Copier le lien</button>
-    <p class="mu" style="margin-top:12px;">Gagnez 600 F lorsque vos filleuls effectuent leur première recharge !</p>
-    <hr style="border-color:var(--bd);margin:12px 0">
-    <p class="mu">Membres invités dans votre équipe : <b>${teamN}</b></p>
-  </div>`;
-},
+    <label>Montant en FCFA (Min. 1 000 F)</label>
+    <input id="a" type="number" placeholder="Ex: 5000">
+    <div id="err" class="err"></div>
+    <button class="btn" onclick="toMethod()">Continuer</button>
+    <div style="margin-top: 15px; text-align: center;">
+      <p class="mu" style="margin-bottom: 8px;">Ou effectuez un paiement direct sécurisé via Jeko :</p>
+      <a class="btn btn-gold" href="${PAY_LINK}" target="_blank">Payer via Jeko 🌐</a>
+    </div>
+  </div>`,
 
-account:()=>{const u=U();return`<h2>Mon compte</h2><div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(u.phone)} · Solde ${F(u.bal)}</div></div>`+[["team","Équipe & Parrainage"],["histRec","Historique des recharges"],["histRet","Historique des retraits"],["achats","Mes achats"],["link","Lier mon compte de retrait"],["service","Service client"]].map(x=>`<button class="li" onclick="go('${x[0]}')">${x[1]} <span>›</span></button>`).join("")+`<button class="btn out" onclick="logout()">Se déconnecter</button>`},
-recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric" value="${T.amt||""}"><div class="chips">${[5000,10000,30000,50000,100000].map(v=>`<button onclick="a.value=${v}">${v.toLocaleString("fr-FR")}</button>`).join("")}</div><div id="err" class="err"></div><button class="btn" onclick="toMethod()">Confirmer</button></div>`,
+  method:()=>`${back()}<h2>Choisissez le mode de paiement</h2>
+  <p class="mu">Montant : <b>${F(T.amt)}</b></p>
+  ${METH.map(m=>`<button class="li" onclick="go('payDetails',{m:'${m}'})">${m} <span>›</span></button>`).join("")}`,
 
-method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+
-  `<button class="li wave" onclick="go('payWave')"><b>Wave</b><span>›</span></button>`+
-  `<button class="li" style="border: 2px solid #ffcc00;" onclick="go('payMTN')"><b>MTN Money</b><span>›</span></button>`+
-  `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`,
+  payDetails:()=>{
+    const num = T.m === "Wave" ? WAVE_NUM : (T.m === "Moov Money" ? MOOV_NUM : MTN_NUM);
+    return `${back()}<h2>Paiement ${T.m}</h2>
+    <div class="card">
+      <p class="mu">Veuillez transférer exactement <b>${F(T.amt)}</b> sur le numéro suivant :</p>
+      <div class="num" style="margin:12px 0; color:var(--pr);">${num}</div>
+      <button class="btn sec" onclick="copyN('${num}')">Copier le numéro</button>
+      <hr style="border-color:var(--bd);margin:16px 0">
+      <label>Votre numéro de téléphone (expéditeur)</label><input id="pn" type="tel">
+      <label>ID de transaction / Référence</label><input id="tx">
+      <div id="err" class="err"></div>
+      <button class="btn" onclick="confirmPay('${T.m}')">J'ai effectué le paiement</button>
+    </div>`;
+  },
 
-payWave:()=>`${back("method")}<h2>Paiement Wave</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro Wave suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${WAVE_NUM}</span><button class="btn btn-sm" onclick="copyN('${WAVE_NUM}')">Copier</button></div><label>Votre numéro Wave</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('Wave')">J'ai payé</button></div>`,
-payMTN:()=>`${back("method")}<h2>Paiement MTN Money</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro MTN suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${MTN_NUM}</span><button class="btn btn-sm" onclick="copyN('${MTN_NUM}')">Copier</button></div><label>Votre numéro MTN</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('MTN Money')">J'ai payé</button></div>`,
-payMoov:()=>`${back("method")}<h2>Paiement Moov Money</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro Moov suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${MOOV_NUM}</span><button class="btn btn-sm" onclick="copyN('${MOOV_NUM}')">Copier</button></div><label>Votre numéro Moov</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('Moov Money')">J'ai payé</button></div>`,
+  withdraw:()=>`${back()}<h2>Retirer des fonds</h2>
+  <div class="card">
+    <label>Montant du retrait (Min. 1 000 F)</label><input id="a" type="number">
+    <label>Votre numéro de réception</label><input id="pn" type="tel">
+    <div id="err" class="err"></div>
+    <button class="btn" onclick="doWd()">Valider le retrait</button>
+  </div>`,
 
-withdraw:()=>`${back()}<h2>Retirer des fonds</h2><div class="card"><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric"><label>Numéro de réception</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doWd()">Valider le retrait</button></div>`,
-histRec:()=>`${back()}<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge pour le moment."),
-histRet:()=>`${back()}<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait pour le moment."),
-service:()=>`${back()}<h2>Service client</h2><div class="card" style="text-align:center"><p class="mu">Besoin d'aide ? Contactez notre support sur WhatsApp.</p><a class="btn" href="${SUPPORT}" target="_blank">Ouvrir le support WhatsApp</a></div>`,
-link:()=>`${back()}<h2>Lier mon compte de retrait</h2><div class="card"><label>Méthode</label><select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select><label>Numéro de téléphone</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doLink()">Enregistrer</button></div>`,
-card:()=>`${back()}<h2>Compte lié</h2><div class="card"><p class="mu">Compte enregistré avec succès.</p><button class="btn sec" onclick="go('link')">Modifier</button></div>`
+  team:()=>{
+    const u = U();
+    const refLink = BASE_REF_LINK + "?ref=" + (u.phone || "");
+    return `${back()}<h2>Mon Équipe & Parrainage</h2>
+    <div class="card" style="text-align:center;">
+      <p class="mu">Partagez votre lien d'invitation :</p>
+      <input type="text" value="${refLink}" readonly style="text-align:center; font-size:13px;">
+      <button class="btn sec" onclick="copyLink('${refLink}')">Copier le lien de parrainage</button>
+    </div>`;
+  },
+
+  histRec:()=>`${back()}<h2>Historique des Recharges</h2>`+hist(recs,"Aucune recharge pour le moment."),
+  histRet:()=>`${back()}<h2>Historique des Retraits</h2>`+hist(rets,"Aucun retrait pour le moment."),
+
+  service:()=>`${back()}<h2>Service Client</h2>
+  <div class="card" style="text-align:center;">
+    <p class="mu">Besoin d'aide ? Contactez notre support officiel sur WhatsApp.</p>
+    <a class="btn" href="${SUPPORT}" target="_blank">Ouvrir le Support WhatsApp 💬</a>
+  </div>`
 };
 
 function render(){
   const app=document.getElementById("app"),nav=document.getElementById("nav");
   if(!auth.currentUser){
-    app.innerHTML=(pages[P]||pages.signup)();
+    app.innerHTML=(pages[P]&&P==="signup")?pages.signup():pages.login();
     nav.innerHTML="";
     return;
   }
-  if(["signup","login"].includes(P)) P="home";
-  app.innerHTML=(pages[P]||pages.home)();
-  nav.innerHTML=[
-    ["home","🏠","Accueil"],
-    ["invest","📈","Investir"],
-    ["achats","📦","Achats"],
-    ["team","👥","Équipe"],
-    ["account","👤","Compte"]
-  ].map(x=>`<button class="${P==x[0]?"on":""}" onclick="go('${x[0]}')"><span>${x[1]}</span>${x[2]}</button>`).join("");
+  app.innerHTML=pages[P]?pages.html?pages[P]():pages[P]():pages.home();
+  if(["home","invest","team","service"].includes(P)){
+    nav.innerHTML=`
+      <button class="${P==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Accueil</button>
+      <button class="${P==='invest'?'on':''}" onclick="go('invest')"><span>📈</span>Investir</button>
+      <button class="${P==='team'?'on':''}" onclick="go('team')"><span>👥</span>Équipe</button>
+      <button class="${P==='service'?'on':''}" onclick="go('service')"><span>💬</span>Support</button>
+    `;
+    nav.style.display="flex";
+  }else{
+    nav.style.display="none";
+  }
 }
 
-onAuthStateChanged(auth,user=>{
-  unsubs.forEach(u=>u());unsubs=[];
-  if(user){
-    unsubs.push(onSnapshot(doc(fs,"users",user.uid),async d=>{
-      ud=d.data()||{};
+onAuthStateChanged(auth, async u=>{
+  unsubs.forEach(fn=>fn());unsubs=[];
+  if(u){
+    loading=true;
+    unsubs.push(onSnapshot(doc(fs,"users",u.uid),d=>{
+      ud=d.exists()?d.data():null;
+      if(loading){loading=false;go("home");}
+      else render();
       checkAndUpdateButton();
-      render();
     }));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"recs"),s=>{recs=s.docs.map(x=>x.data());if(P=="histRec")render();}));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"rets"),s=>{rets=s.docs.map(x=>x.data());if(P=="histRet")render();}));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"buys"),s=>{buys=s.docs.map(x=>x.data());if(["home","achats"].includes(P))render();}));
-  } else {
-    ud=null;recs=[];rets=[];buys=[];teamN=0;
+    unsubs.push(onSnapshot(query(collection(fs,"users",u.uid,"recs")),s=>{
+      recs=s.docs.map(d=>d.data());
+    }));
+    unsubs.push(onSnapshot(query(collection(fs,"users",u.uid,"rets")),s=>{
+      rets=s.docs.map(d=>d.data());
+    }));
+    unsubs.push(onSnapshot(query(collection(fs,"users",u.uid,"buys")),s=>{
+      buys=s.docs.map(d=>d.data());
+    }));
+  }else{
+    ud=null;recs=[];rets=[];buys=[];
     render();
   }
 });
+
 render();
 </script>
 </body>
