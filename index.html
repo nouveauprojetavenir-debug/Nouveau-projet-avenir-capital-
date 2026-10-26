@@ -46,7 +46,7 @@ import {getFirestore,doc,setDoc,onSnapshot,collection,query,where,addDoc,runTran
 
 const firebaseConfig={apiKey:"AIzaSyC8jUCtIrHrySXzNAXTdRTaCBTNgEirS8w",authDomain:"avenir-capital.firebaseapp.com",projectId:"avenir-capital",storageBucket:"avenir-capital.firebasestorage.app",messagingSenderId:"565430762059",appId:"1:565430762059:web:3c7d536d55d3277d35ebce"};
 
-const WAVE_NUM="0171518903";
+const WAVE_NUM="0509302107";
 const MOOV_NUM="0104217547";
 const MTN_NUM="0545576710";
 const SUPPORT="https://wa.me/message/ABZ2BRFJPVIOE1";
@@ -386,80 +386,54 @@ recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><label>Montant (minim
 method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+
   `<button class="li wave" onclick="go('payWave')"><b>Wave</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #ffcc00;" onclick="go('payMTN')"><b>MTN Money</b><span>›</span></button>`+
-  `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`+
-  `<button class="li off" onclick="err('Orange Money est actuellement indisponible.')"><b>Orange Money</b><span>Indisponible</span></button>`+
-  `<div id="err" class="err"></div>`,
+  `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`,
 
-payWave:()=>`${back("method")}<h2>Paiement Wave</h2>
-<div class="card wave">
-  <p style="margin-top:0">Veuillez payer pour Avenir en cliquant sur le lien ci-dessous :</p>
-  <a class="btn" style="margin-bottom:12px;" href="${PAY_LINK}" target="_blank" rel="noopener">Payer via Jeko Africa</a>
-  <p class="mu">Ou copiez le numéro pour effectuer votre paiement de <b>${F(T.amt)}</b> :</p>
-  <div class="row"><span class="num">${WAVE_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${WAVE_NUM}')">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('Wave')">Confirmer le paiement</button>
-</div>`,
+payWave:()=>`${back("method")}<h2>Paiement Wave</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro Wave suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${WAVE_NUM}</span><button class="btn btn-sm" onclick="copyN('${WAVE_NUM}')">Copier</button></div><label>Votre numéro Wave</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('Wave')">J'ai payé</button></div>`,
+payMTN:()=>`${back("method")}<h2>Paiement MTN Money</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro MTN suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${MTN_NUM}</span><button class="btn btn-sm" onclick="copyN('${MTN_NUM}')">Copier</button></div><label>Votre numéro MTN</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('MTN Money')">J'ai payé</button></div>`,
+payMoov:()=>`${back("method")}<h2>Paiement Moov Money</h2><div class="card"><p class="mu">Envoyez <b>${F(T.amt)}</b> sur le numéro Moov suivant :</p><div class="row" style="margin-bottom:12px"><span class="num">${MOOV_NUM}</span><button class="btn btn-sm" onclick="copyN('${MOOV_NUM}')">Copier</button></div><label>Votre numéro Moov</label><input id="pn" type="tel"><label>ID de transaction</label><input id="tx"><div id="err" class="err"></div><button class="btn" onclick="confirmPay('Moov Money')">J'ai payé</button></div>`,
 
-payMTN:()=>`${back("method")}<h2>Paiement MTN Money</h2>
-<div class="card" style="border:2px solid #ffcc00">
-  <p class="mu">Effectuez votre dépôt MTN Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
-  <div class="row"><span class="num">${MTN_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MTN_NUM}')">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('MTN Money')">Confirmer le paiement</button>
-</div>`,
-
-payMoov:()=>`${back("method")}<h2>Paiement Moov Money</h2>
-<div class="card" style="border:2px solid #00a859">
-  <p class="mu">Effectuez votre dépôt Moov Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
-  <div class="row"><span class="num">${MOOV_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MOOV_NUM}')">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('Moov Money')">Confirmer le paiement</button>
-</div>`,
-
-histRec:()=>`<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge."),
-withdraw:()=>{const c=ud.card||null;return`${back()}<h2>Retirer</h2><div class="card"><p class="mu">Solde : ${F(ud.bal)}</p><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric"><label>Votre numéro</label><input id="pn" type="tel" value="${c?esc(c.num):""}"><div id="err" class="err"></div><button class="btn" onclick="doWd()">Confirmer le retrait</button></div>`},
-histRet:()=>`<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait."),
-link:()=>`${back("account")}<h2>Lier mon compte de retrait</h2><div class="card"><label>Méthode</label><select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select><label>Numéro</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doLink()">Confirmer</button></div>`,
-card:()=>{const c=ud.card||null;return`${back("account")}<h2>Ma carte bancaire</h2>`+(c?`<div class="hero"><small>${esc(c.m)}</small><b>${esc(c.num)}</b><small>${esc(ud.name)}</small></div>`:`<p class="mu">Aucun compte lié.</p><button class="btn" onclick="go('link')">Lier un compte</button>`)},
-service:()=>`${back("account")}<h2>Service client</h2><div class="card"><p class="mu">Une question ? Écrivez-nous sur WhatsApp.</p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="${SUPPORT}" target="_blank" rel="noopener">Contacter sur WhatsApp</a><p class="mu" style="margin-top:10px">Disponible tous les jours.</p></div>`
+withdraw:()=>`${back()}<h2>Retirer des fonds</h2><div class="card"><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric"><label>Numéro de réception</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doWd()">Valider le retrait</button></div>`,
+histRec:()=>`${back()}<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge pour le moment."),
+histRet:()=>`${back()}<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait pour le moment."),
+service:()=>`${back()}<h2>Service client</h2><div class="card" style="text-align:center"><p class="mu">Besoin d'aide ? Contactez notre support sur WhatsApp.</p><a class="btn" href="${SUPPORT}" target="_blank">Ouvrir le support WhatsApp</a></div>`,
+link:()=>`${back()}<h2>Lier mon compte de retrait</h2><div class="card"><label>Méthode</label><select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select><label>Numéro de téléphone</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doLink()">Enregistrer</button></div>`,
+card:()=>`${back()}<h2>Compte lié</h2><div class="card"><p class="mu">Compte enregistré avec succès.</p><button class="btn sec" onclick="go('link')Modifier</button></div>`
 };
 
 function render(){
- const app=document.getElementById("app"),n=document.getElementById("nav");
- if(loading){app.innerHTML='<p class="mu">Chargement…</p>';n.style.display="none";return}
- if(!ud && P!="login")P="signup";
- if(ud && (P=="signup"||P=="login"))P="home";
- app.innerHTML=pages[P]();
- const tabs=[["home","🏠","Accueil"],["invest","📈","Investir"],["achats","🧾","Achats"],["team","👥","Équipe"],["account","👤","Compte"]];
- n.style.display=ud?"flex":"none";
- n.innerHTML=tabs.map(t=>`<button class="${t[0]==P?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
- if (ud && P === "home") checkAndUpdateButton();
+  const app=document.getElementById("app"),nav=document.getElementById("nav");
+  if(!auth.currentUser){
+    app.innerHTML=(pages[P]||pages.signup)();
+    nav.innerHTML="";
+    return;
+  }
+  if(["signup","login"].includes(P)) P="home";
+  app.innerHTML=(pages[P]||pages.home)();
+  nav.innerHTML=[
+    ["home","🏠","Accueil"],
+    ["invest","📈","Investir"],
+    ["achats","📦","Achats"],
+    ["team","👥","Équipe"],
+    ["account","👤","Compte"]
+  ].map(x=>`<button class="${P==x[0]?"on":""}" onclick="go('${x[0]}')"><span>${x[1]}</span>${x[2]}</button>`).join("");
 }
 
-onAuthStateChanged(auth, u=>{
- unsubs.forEach(f=>f());unsubs=[];ud=null;recs=[];rets=[];buys=[];teamN=0;
- if(!u){loading=false;P="login";render();return}
- const L=(c,set)=>unsubs.push(onSnapshot(query(collection(fs, "users", u.uid, c)),s=>{set(s.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0)));render()}));
- unsubs.push(onSnapshot(doc(fs,"users",u.uid),s=>{if(s.exists()){
-  ud={...s.data(),id:u.uid};loading=false;
-  if(!unsubs.team){unsubs.team=1;unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",getUrlParam('ref')||"GTHZS")),q=>{teamN=q.size;render()}))}
-  render()}}));
- L("recs",x=>recs=x);L("rets",x=>rets=x);L("buys",x=>buys=x);
+onAuthStateChanged(auth,user=>{
+  unsubs.forEach(u=>u());unsubs=[];
+  if(user){
+    unsubs.push(onSnapshot(doc(fs,"users",user.uid),async d=>{
+      ud=d.data()||{};
+      checkAndUpdateButton();
+      render();
+    }));
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"recs"),s=>{recs=s.docs.map(x=>x.data());if(P=="histRec")render();}));
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"rets"),s=>{rets=s.docs.map(x=>x.data());if(P=="histRet")render();}));
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"buys"),s=>{buys=s.docs.map(x=>x.data());if(["home","achats"].includes(P))render();}));
+  } else {
+    ud=null;recs=[];rets=[];buys=[];teamN=0;
+    render();
+  }
 });
-
-Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink,checkAndUpdateButton,reclamerMesGains});
 render();
 </script>
 </body>
