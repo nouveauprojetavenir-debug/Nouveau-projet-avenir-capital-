@@ -18,6 +18,7 @@ input,select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid var(--bd
 label{font-size:13px;color:var(--mu)}
 button{font:inherit;cursor:pointer}
 .btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--pr);color:#fff;font-weight:600;text-decoration:none;display:inline-block;text-align:center}
+.btn:disabled{background:#374151;cursor:not-allowed;opacity:0.7}
 .btn.sec{background:rgba(16,185,129,0.15);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff}
 .btn-sm{width:auto;padding:10px 20px;font-size:15px;border-radius:8px}
@@ -66,6 +67,7 @@ const METH=["Wave","MTN Money","Moov Money","Orange Money"];
 const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
 let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="signup",T={};
+let hasGainsAvailable = false;
 
 const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
 const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n||0).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleDateString("fr-FR");
@@ -77,7 +79,7 @@ function getUrlParam(param){
   return urlParams.get(param);
 }
 
-function go(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)}
+window.go = function(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)};
 function err(m){const e=document.getElementById("err");if(e)e.textContent=m}
 const msg=e=>({"auth/email-already-in-use":"Ce numéro est déjà inscrit.","auth/invalid-credential":"Numéro ou mot de passe incorrect.","auth/weak-password":"Mot de passe : 6 caractères minimum."}[e.code]||("Erreur : "+(e.code||e.message)));
 const back=(p="home")=>`<button class="back" onclick="go('${p}')">‹ Retour</button>`;
@@ -91,6 +93,215 @@ window.copyLink = function(link){
   navigator.clipboard.writeText(link).then(()=>alert("✅ Lien de parrainage copié !")).catch(()=>alert(link))
 };
 
+async function verifierGainsDisponibles(){
+  const user = auth.currentUser;
+  if (!user) return false;
+  try {
+    const buysRef = collection(fs, "users", user.uid, "buys");
+    const snap = await getDocs(buysRef);
+    if (snap.empty) return false;
+    const now = Date.now();
+    const msPerDay = 86400000;
+    for (const d of snap.docs) {
+      const buyData = d.data();
+      const createdAt = buyData.createdAt || now;
+      const lastClaim = buyData.lastClaim || createdAt;
+      const daysPaid = buyData.daysPaid || 0;
+      const maxDays = buyData.days;
+      if (daysPaid >= maxDays) continue;
+      const daysElapsed = Math.floor((now - lastClaim) / msPerDay);
+      if (daysElapsed > 0) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+window.checkAndUpdateButton = async function(){
+  hasGainsAvailable = await verifierGainsDisponibles();
+  const btn = document.getElementById("btn-reclamer");
+  const msgEl = document.getElementById("gain-msg");
+  if (btn) btn.disabled = !hasGainsAvailable;
+  if (msgEl) {
+    if (hasGainsAvailable) {
+      msgEl.style.color = "var(--pr)";
+      msgEl.textContent = "✨ Des gains sont disponibles !";
+    } else {
+      msgEl.style.color = "var(--mu)";
+      msgEl.textContent = "⏰ Revenez demain matin pour réclamer";
+    }
+  }
+};
+
+window.reclamerMesGains = async function() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const msgEl = document.getElementById("gain-msg");
+  const btn = document.getElementById("btn-reclamer");
+  if (btn) btn.disabled = true;
+  if (msgEl) msgEl.textContent = "Calcul en cours...";
+
+  try {
+    const buysRef = collection(fs, "users", user.uid, "buys");
+    const snap = await getDocs(buysRef);
+    if (snap.empty) {
+      if (msgEl) msgEl.textContent = "Vous n'avez aucun sac d'investissement actif.";
+      hasGainsAvailable = false;
+      return;
+    }
+
+    let totalGain = 0;
+    const now = Date.now();
+    const msPerDay = 86400000;
+
+    for (const d of snap.docs) {
+      const buyData = d.data();
+      const createdAt = buyData.createdAt || now;
+      const lastClaim = buyData.lastClaim || createdAt;
+      const daysPaid = buyData.daysPaid || 0;
+      const maxDays = buyData.days;
+      if (daysPaid >= maxDays) continue;
+      const daysElapsed = Math.floor((now - lastClaim) / msPerDay);
+      if (daysElapsed > 0) {
+        const daysToPay = Math.min(daysElapsed, maxDays - daysPaid);
+        const gain = daysToPay * buyData.d;
+        totalGain += gain;
+        await updateDoc(doc(fs, "users", user.uid, "buys", d.id), {
+          daysPaid: daysPaid + daysToPay,
+          lastClaim: lastClaim + (daysToPay * msPerDay)
+        });
+      }
+    }
+
+    if (totalGain > 0) {
+      await runTransaction(fs, async t => {
+        const uRef = doc(fs, "users", user.uid);
+        const uSnap = await t.get(uRef);
+        const curBal = uSnap.data().bal || 0;
+        t.update(uRef, { bal: curBal + totalGain });
+      });
+      if (msgEl) {
+        msgEl.style.color = "var(--pr)";
+        msgEl.textContent = `🎉 +${F(totalGain)} ajouté à votre solde !`;
+      }
+    } else {
+      if (msgEl) {
+        msgEl.style.color = "var(--mu)";
+        msgEl.textContent = "🔒 Pas encore de gains. Revenez demain matin.";
+      }
+    }
+    hasGainsAvailable = false;
+  } catch (e) {
+    if (msgEl) {
+      msgEl.style.color = "var(--er)";
+      msgEl.textContent = "Erreur : " + e.message;
+    }
+    hasGainsAvailable = true;
+  }
+  setTimeout(() => checkAndUpdateButton(), 30000);
+};
+
+window.signup = async function(){
+  try {
+    const name = $('n'), phone = $('ph'), pw = $('pw'), ref = $('rf');
+    if(!name || !phone || !pw) return err("Veuillez remplir tous les champs.");
+    const res = await createUserWithEmailAndPassword(auth, em(phone), pw);
+    await setDoc(doc(fs, "users", res.user.uid), {
+      name, phone, ref, bal: 0, ts: Date.now()
+    });
+  } catch(e){ err(msg(e)); }
+};
+
+window.login = async function(){
+  try {
+    const phone = $('ph'), pw = $('pw');
+    if(!phone || !pw) return err("Veuillez remplir tous les champs.");
+    await signInWithEmailAndPassword(auth, em(phone), pw);
+  } catch(e){ err(msg(e)); }
+};
+
+window.logout = function(){ signOut(auth); };
+
+window.buy = async function(idx) {
+  const item = VIP[idx];
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await runTransaction(fs, async t => {
+      const uRef = doc(fs, "users", user.uid);
+      const uSnap = await t.get(uRef);
+      const curBal = uSnap.data().bal || 0;
+      if (curBal < item.p) throw new Error("Solde insuffisant pour acheter ce sac.");
+      t.update(uRef, { bal: curBal - item.p });
+    });
+    const now = Date.now();
+    await addDoc(collection(fs, "users", user.uid, "buys"), {
+      n: item.n, p: item.p, d: item.d, days: item.days,
+      t: D(), createdAt: now, lastClaim: now, daysPaid: 0
+    });
+    alert("✅ Achat du " + item.n + " réussi !");
+    setTimeout(() => checkAndUpdateButton(), 500);
+    go("achats");
+  } catch (e) {
+    err(e.message);
+  }
+};
+
+window.toMethod = function(){
+  const amt = Number($('a'));
+  if(!amt || amt < 1000) return err("Le montant minimum est de 1 000 F.");
+  go('method', {amt});
+};
+
+window.confirmPay = async function(m){
+  const user = auth.currentUser;
+  if(!user) return;
+  const pn = $('pn'), tx = $('tx');
+  if(!pn || !tx) return err("Veuillez renseigner votre numéro et l'ID de transaction.");
+  try {
+    await addDoc(collection(fs, "users", user.uid, "recs"), {
+      a: T.amt, m, pn, tx, t: D(), s: "En attente", ts: Date.now()
+    });
+    alert("✅ Votre demande de recharge a été soumise avec succès !");
+    go("histRec");
+  } catch(e) { err(e.message); }
+};
+
+window.doWd = async function(){
+  const user = auth.currentUser;
+  if(!user) return;
+  const a = Number($('a')), pn = $('pn');
+  if(!a || a < 1000) return err("Le montant minimum de retrait est de 1 000 F.");
+  if(!pn) return err("Veuillez entrer votre numéro de paiement.");
+  try {
+    await runTransaction(fs, async t => {
+      const uRef = doc(fs, "users", user.uid);
+      const uSnap = await t.get(uRef);
+      const curBal = uSnap.data().bal || 0;
+      if (curBal < a) throw new Error("Solde insuffisant.");
+      t.update(uRef, { bal: curBal - a });
+    });
+    await addDoc(collection(fs, "users", user.uid, "rets"), {
+      a, pn, t: D(), s: "En attente", ts: Date.now()
+    });
+    alert("✅ Demande de retrait effectuée !");
+    go("histRet");
+  } catch(e) { err(e.message); }
+};
+
+window.doLink = async function(){
+  const user = auth.currentUser;
+  if(!user) return;
+  const m = $('m'), num = $('pn');
+  if(!num) return err("Entrez un numéro valide.");
+  try {
+    await updateDoc(doc(fs, "users", user.uid), { card: { m, num } });
+    alert("✅ Compte de retrait lié avec succès !");
+    go("card");
+  } catch(e) { err(e.message); }
+};
+
 const pages={
 signup:()=>{
   const refCode = getUrlParam('ref') || '';
@@ -99,11 +310,11 @@ signup:()=>{
     <label>Nom complet</label><input id="n">
     <label>Numéro de téléphone</label><input id="ph" type="tel">
     <label>Mot de passe</label><input id="pw" type="password">
-    <label>Code d’invitation (parrain)</label><input id="rf" value="${esc(refCode)}">
+    <label>Code d'invitation (parrain)</label><input id="rf" value="${esc(refCode)}">
     <div id="err" class="err"></div>
-    <button class="btn" onclick="signup()">S’inscrire</button>
+    <button class="btn" onclick="signup()">S'inscrire</button>
   </div>
-  <button class="btn sec" onclick="go('login')">J’ai déjà un compte</button>`;
+  <button class="btn sec" onclick="go('login')">J'ai déjà un compte</button>`;
 },
 login:()=>`<h1>Avenir Capital</h1><div class="card"><label>Numéro de téléphone</label><input id="ph" type="tel"><label>Mot de passe</label><input id="pw" type="password"><div id="err" class="err"></div><button class="btn" onclick="login()">Se connecter</button></div><button class="btn sec" onclick="go('signup')">Créer un compte</button>`,
 
@@ -121,24 +332,21 @@ home:()=>{
     <div class="reclamer-box">
       <h3 style="color:var(--pr);margin:0 0 6px 0">💰 Gains Journaliers</h3>
       <p class="mu" style="margin:0 0 12px 0">Récupérez vos revenus des sacs actifs chaque jour en FCFA</p>
-      <button class="btn btn-sm" onclick="reclamerMesGains()">Réclamer mes gains</button>
-      <div id="gain-msg" class="err" style="margin-top:8px"></div>
-    </div>
-
-    <div class="card" style="border: 2px dashed var(--gold); text-align:center;">
-      <h3 style="color:var(--gold); margin-top:0;">🎡 Roue de la Fortune</h3>
-      <p class="mu">Tentez de remporter jusqu'à <b>400 000 F</b> de bonus instantané !</p>
-      <button class="btn btn-gold" onclick="go('roue')">Jouer à la Roue</button>
+      <button id="btn-reclamer" class="btn btn-sm" onclick="reclamerMesGains()" ${!hasGainsAvailable ? 'disabled' : ''}>
+        ${hasGainsAvailable ? '🔓 Réclamer mes gains' : '🔒 En attente...'}
+      </button>
+      <div id="gain-msg" class="err" style="margin-top:8px">
+        ${hasGainsAvailable ? '✨ Des gains sont disponibles !' : '⏰ Revenez demain matin pour réclamer'}
+      </div>
     </div>
 
     <div class="grid">
       <button onclick="go('recharge')">➕<br>Recharger</button>
       <button onclick="go('withdraw')">💸<br>Retirer</button>
       <button onclick="go('invest')">📈<br>Investir</button>
-      <button onclick="go('roue')">🎡<br>Roue Bonus</button>
+      <button onclick="go('team')">👥<br>Parrainage</button>
     </div>
     <button class="li" onclick="go('team')">👥 Mon équipe & Parrainage <span>›</span></button>
-    <button class="li" onclick="go('adminUsers')">📋 Liste des membres inscrits <span>›</span></button>
     <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
     <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
     <button class="li" onclick="go('service')">Service client <span>›</span></button>
@@ -153,8 +361,8 @@ invest:()=>`<h2>Investir</h2>`+VIP.map((v,i)=>`<div class="card">
 </div>`).join("")+`<div id="err" class="err"></div>`,
 
 achats:()=>{const b=U().buys;return`<h2>Mes achats</h2>`+(b.length?b.map(x=>`<div class="card">
-  <div class="row"><b>${x.n}</b><span class="tag" style="background:rgba(16,185,129,0.2);color:var(--wa)">Actif</span></div>
-  <div class="mu">Investi : ${F(x.p)} · ${F(x.d)}/jour · ${x.days} jours<br>Acheté le ${x.t}</div>
+  <div class="row"><b>${x.n}</b><span class="tag" style="background:rgba(16,185,129,0.2);color:var(--wa)">${(x.daysPaid||0) >= x.days ? 'Terminé' : 'Actif'}</span></div>
+  <div class="mu">Investi : ${F(x.p)} · ${F(x.d)}/jour · Retiré: ${x.daysPaid||0}/${x.days} jours<br>Acheté le ${x.t}</div>
 </div>`).join(""):`<p class="mu">Aucun achat pour le moment.</p>`)},
 
 team:()=>{
@@ -166,320 +374,17 @@ team:()=>{
     <p class="mu">Votre lien de parrainage personnel :</p>
     <input type="text" readonly value="${fullRefLink}" id="refLinkInput" style="font-size:12px;background:var(--bg);">
     <button class="btn sec" onclick="copyLink('${fullRefLink}')">Copier le lien</button>
-    <p class="mu" style="margin-top:12px;">Gagnez <b>600 F</b> lorsque vos filleuls effectuent leur première recharge !</p>
+    <p class="mu" style="margin-top:12px;">Gagnez 600 F lorsque vos filleuls effectuent leur première recharge !</p>
     <hr style="border-color:var(--bd);margin:12px 0">
     <p class="mu">Membres invités dans votre équipe : <b>${teamN}</b></p>
   </div>`;
 },
 
-adminUsers:()=>{
-  return `<h2>Membres Inscrits (${allUsers.length})</h2>
-  <p class="mu">Liste globale de tous les utilisateurs enregistrés sur la plateforme :</p>
-  ${allUsers.length ? allUsers.map(usr => `
-    <div class="card">
-      <div class="row"><b>${esc(usr.name || 'Utilisateur')}</b><span class="tag">${F(usr.bal || 0)}</span></div>
-      <div class="mu">Téléphone : ${esc(usr.phone || 'N/A')}<br>Parrain : ${esc(usr.ref || 'Aucun')}<br>Inscrit le : ${new Date(usr.ts || Date.now()).toLocaleDateString("fr-FR")}</div>
-    </div>
-  `).join("") : `<p class="mu">Aucun membre trouvé.</p>`}
-  <button class="btn sec" onclick="go('home')">Retour à l'accueil</button>`;
-},
-
-roue:()=>{
-  return `<h2>Roue de la Fortune 🎡</h2>
-  <div class="card" style="text-align:center;">
-    <p class="mu">Tentez votre chance et gagnez de grosses sommes directement sur votre solde !</p>
-    <div id="roue-result" style="font-size:22px; font-weight:bold; color:var(--gold); margin: 20px 0;">🎁 Gros lots : 150.000F, 200.000F, 350.000F, 400.000F</div>
-    <button class="btn btn-gold" onclick="tournerRoue()" id="btnRoue">Tourner la roue</button>
-  </div>
-  <button class="btn sec" onclick="go('home')">Retour à l'accueil</button>`;
-},
-
-account:()=>{const u=U();return`<h2>Mon compte</h2><div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(me.phone)} · Solde ${F(u.bal)}</div></div>`+[["team","Équipe & Parrainage"],["adminUsers","Liste des membres"],["histRec","Historique des recharges"],["histRet","Historique des retraits"],["achats","Mes achats"],["link","Lier mon compte de retrait"],["card","Ma carte bancaire"],["service","Service client"]].map(x=>`<button class="li" onclick="go('${x[0]}')">${x[1]} <span>›</span></button>`).join("")+`<button class="btn out" onclick="logout()">Se déconnecter</button>`},
+account:()=>{const u=U();return`<h2>Mon compte</h2><div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(u.phone)} · Solde ${F(u.bal)}</div></div>`+[["team","Équipe & Parrainage"],["histRec","Historique des recharges"],["histRet","Historique des retraits"],["achats","Mes achats"],["link","Lier mon compte de retrait"],["service","Service client"]].map(x=>`<button class="li" onclick="go('${x[0]}')">${x[1]} <span>›</span></button>`).join("")+`<button class="btn out" onclick="logout()">Se déconnecter</button>`},
 recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric" value="${T.amt||""}"><div class="chips">${[5000,10000,50000,100000].map(v=>`<button onclick="a.value=${v}">${v.toLocaleString("fr-FR")}</button>`).join("")}</div><div id="err" class="err"></div><button class="btn" onclick="toMethod()">Confirmer</button></div>`,
 
 method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+
   `<button class="li wave" onclick="go('payWave')"><b>Wave</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #ffcc00;" onclick="go('payMTN')"><b>MTN Money</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`+
-  `<button class="li off" onclick="err('Orange Money est actuellement indisponible.')"><b>Orange Money</b><span>Indisponible</span></button>`+
-  `<div id="err" class="err"></div>`,
-
-payWave:()=>`${back("method")}<h2>Paiement Wave</h2>
-<div class="card wave">
-  <p style="margin-top:0">Veuillez payer pour Avenir en cliquant sur le lien ci-dessous :</p>
-  <a class="btn" style="margin-bottom:12px;" href="${PAY_LINK}" target="_blank" rel="noopener">Payer via Jeko Africa</a>
-  <p class="mu">Ou copiez le numéro pour effectuer votre paiement de <b>${F(T.amt)}</b> :</p>
-  <div class="row"><span class="num">${WAVE_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${WAVE_NUM}')" id="cp">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('Wave')">Confirmer le paiement</button>
-</div>`,
-
-payMTN:()=>`${back("method")}<h2>Paiement MTN Money</h2>
-<div class="card" style="border:2px solid #ffcc00">
-  <p class="mu">Effectuez votre dépôt MTN Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
-  <div class="row"><span class="num">${MTN_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MTN_NUM}')" id="cp">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('MTN Money')">Confirmer le paiement</button>
-</div>`,
-
-payMoov:()=>`${back("method")}<h2>Paiement Moov Money</h2>
-<div class="card" style="border:2px solid #00a859">
-  <p class="mu">Effectuez votre dépôt Moov Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
-  <div class="row"><span class="num">${MOOV_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MOOV_NUM}')" id="cp">Copier</button></div>
-</div>
-<div class="card">
-  <label>Votre numéro de paiement</label><input id="pn" type="tel">
-  <label>ID de la transaction</label><input id="tx">
-  <div id="err" class="err"></div>
-  <button class="btn" onclick="confirmPay('Moov Money')">Confirmer le paiement</button>
-</div>`,
-
-histRec:()=>`<h2>Historique des recharges</h2>`+hist(U().recs,"Aucune recharge."),
-withdraw:()=>{const c=U().card;return`${back()}<h2>Retirer</h2><div class="card"><p class="mu">Solde : ${F(U().bal)}</p><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric"><label>Votre numéro</label><input id="pn" type="tel" value="${c?esc(c.num):""}"><div id="err" class="err"></div><button class="btn" onclick="doWd()">Confirmer le retrait</button></div>`},
-histRet:()=>`<h2>Historique des retraits</h2>`+hist(U().rets,"Aucun retrait."),
-link:()=>`${back("account")}<h2>Lier mon compte de retrait</h2><div class="card"><label>Méthode</label><select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select><label>Numéro</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doLink()">Confirmer</button></div>`,
-card:()=>{const c=U().card;return`${back("account")}<h2>Ma carte bancaire</h2>`+(c?`<div class="hero"><small>${esc(c.m)}</small><b>${esc(c.num)}</b><small>${esc(U().name)}</small></div>`:`<p class="mu">Aucun compte lié.</p><button class="btn" onclick="go('link')">Lier un compte</button>`)},
-service:()=>`${back("account")}<h2>Service client</h2><div class="card"><p class="mu">Une question ? Écrivez-nous sur WhatsApp.</p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="${SUPPORT}" target="_blank" rel="noopener">Contacter sur WhatsApp</a><p class="mu" style="margin-top:10px">Disponible tous les jours.</p></div>`
-};
-
-function render(){
- const app=document.getElementById("app"),n=document.getElementById("nav");
- if(loading){app.innerHTML='<p class="mu">Chargement…</p>';n.style.display="none";return}
- if(!U()&&P!="login")P="signup";
- if(U()&&(P=="signup"||P=="login"))P="home";
- app.innerHTML=pages[P]();
- const tabs=[["home","🏠","Accueil"],["invest","📈","Investir"],["achats","🧾","Achats"],["team","👥","Équipe"],["account","👤","Compte"]];
- n.style.display=U()?"flex":"none";
- n.innerHTML=tabs.map(t=>`<button class="${t[0]==P?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
-}
-
-// 🎡 Roue de la fortune avec grosses sommes et crédit automatique
-window.tournerRoue = async function() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const resEl = document.getElementById("roue-result");
-  const btnEl = document.getElementById("btnRoue");
-  if(btnEl) btnEl.disabled = true;
-
-  // Gros lots demandés
-  const gainsPossibles = [50000, 100000, 150000, 200000, 350000, 400000];
-  const gagne = gainsPossibles[Math.floor(Math.random() * gainsPossibles.length)];
-
-  if(resEl) resEl.textContent = "🌀 La roue tourne vers un gros lot...";
-
-  setTimeout(async () => {
-    try {
-      // Crédit automatique immédiat dans Firestore
-      await runTransaction(fs, async t => {
-        const userRef = doc(fs, "users", user.uid);
-        const userSnap = await t.get(userRef);
-        const currentBal = userSnap.data().bal || 0;
-        t.update(userRef, { bal: currentBal + gagne });
-      });
-      if(resEl) resEl.textContent = `🎉 Jackpot ! Vous avez gagné ${F(gagne)} crédités !`;
-      alert(`🎉 Incroyable ! ${F(gagne)} ont été ajoutés directement à votre solde.`);
-      render();
-    } catch(e) {
-      if(resEl) resEl.textContent = "Erreur lors du crédit.";
-      if(btnEl) btnEl.disabled = false;
-    }
-  }, 1500);
-};
-
-// ✅ Réclamation automatique des gains journaliers en FCFA selon les jours
-window.reclamerMesGains = async function() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const msgEl = document.getElementById("gain-msg");
-  if (msgEl) msgEl.textContent = "";
-
-  try {
-    const qPurchases = query(collection(fs, "purchases"), where("uid", "==", user.uid));
-    const snap = await getDocs(qPurchases);
-    
-    let gainTotal = 0;
-    const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-
-    snap.docs.forEach(docSnap => {
-      const p = docSnap.data();
-      const startDate = p.ts;
-      const lastClaim = p.lastClaim || startDate;
-      const maxDays = p.days || 31;
-      const totalDaysActive = Math.floor((now - startDate) / oneDayMs);
-
-      if (totalDaysActive < maxDays) {
-        const daysToPay = Math.floor((now - lastClaim) / oneDayMs);
-        if (daysToPay >= 1) {
-          gainTotal += (daysToPay * p.d);
-        }
-      }
-    });
-
-    if (gainTotal === 0) {
-      if (msgEl) msgEl.textContent = "Aucun gain journalier disponible pour l'instant. Revenez demain !";
-      return;
-    }
-
-    await runTransaction(fs, async t => {
-      const userRef = doc(fs, "users", user.uid);
-      const userSnap = await t.get(userRef);
-      const currentBal = userSnap.data().bal || 0;
-
-      t.update(userRef, { bal: currentBal + gainTotal });
-      
-      for (let i = 0; i < snap.docs.length; i++) {
-        const pDoc = snap.docs[i];
-        const p = pDoc.data();
-        const lastClaim = p.lastClaim || p.ts;
-        const daysToPay = Math.floor((now - lastClaim) / oneDayMs);
-        if (daysToPay >= 1) {
-          const newLastClaim = lastClaim + (daysToPay * oneDayMs);
-          t.update(doc(fs, "purchases", pDoc.id), { lastClaim: newLastClaim });
-        }
-      }
-    });
-
-    alert(`✅ Succès ! ${F(gainTotal)} ont été ajoutés à votre solde.`);
-    render();
-  } catch (e) {
-    console.error(e);
-    if (msgEl) msgEl.textContent = "Erreur : " + e.message;
-  }
-};
-
-onAuthStateChanged(auth, u=>{
- unsubs.forEach(f=>f());unsubs=[];ud=null;recs=[];rets=[];buys=[];teamN=0;
- if(!u){loading=false;P="login";render();return}
- 
- const L=(c,set)=>unsubs.push(onSnapshot(query(collection(fs,c),where("uid","==",u.uid)),s=>{set(s.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts));render()}));
- 
- unsubs.push(onSnapshot(doc(fs,"users",u.uid),s=>{if(s.exists()){
-  ud={...s.data(),id:u.uid};loading=false;
-  
-  if(!unsubs.team){
-    unsubs.team=1;
-    unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",ud.phone || "")),q=>{teamN=q.size;render()}))
-  }
-  render()}}));
-
- unsubs.push(onSnapshot(collection(fs,"users"),s=>{
-   allUsers = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>b.ts-a.ts);
-   render();
- }));
-
- L("recharges",x=>recs=x);L("withdrawals",x=>rets=x);L("purchases",x=>buys=x);
-});
-
-async function signup(){
-  const n=$("n"),p=$("ph"),w=$("pw"),r=$("rf");
-  if(!n||p.length<8||w.length<6)return err("Remplissez tous les champs (mot de passe : 6 caractères minimum).");
-  try{
-    const c=await createUserWithEmailAndPassword(auth,em(p),w);
-    await setDoc(doc(fs,"users",c.user.uid),{
-      name:n,
-      phone:p,
-      bal:0,
-      ref:r || "",
-      card:null,
-      ts:Date.now()
-    });
-  }catch(e){err(msg(e))}
-}
-
-async function login(){try{await signInWithEmailAndPassword(auth,em($("ph")),$("pw"))}catch(e){err(msg(e))}}
-function logout(){signOut(auth)}
-
-async function buy(i){
-  const v=VIP[i],ref=doc(fs,"users",auth.currentUser.uid);
-  try{
-    await runTransaction(fs,async t=>{
-      const b=(await t.get(ref)).data().bal;
-      if(b<v.p)throw{message:"Solde insuffisant. Rechargez votre compte."};
-      t.update(ref,{bal:b-v.p});
-      t.set(doc(collection(fs,"purchases")),{
-        uid:auth.currentUser.uid,
-        n:v.n,
-        p:v.p,
-        d:v.d,
-        days:v.days,
-        t:D(),
-        ts:Date.now(),
-        lastClaim:Date.now()
-      });
-    });
-    alert("✅ Investissement confirmé !");
-    go("achats");
-  }catch(e){err(e.message)}
-}
-
-function toMethod(){const a=+$("a");if(a<1000)return err("Montant minimum : 1 000 F.");T.amt=a;go("method")}
-
-async function confirmPay(mode){
-  const p=$("pn"),t=$("tx"),a=T.amt;
-  if(a<1000)return err("Montant minimum : 1 000 F.");
-  if(p.length<8||t.length<4)return err("Entre ton numéro et l'ID de transaction.");
-  try{
-    const userSnap = await getDocs(query(collection(fs, "recharges"), where("uid", "==", auth.currentUser.uid)));
-    const isFirstRecharge = userSnap.empty;
-
-    await addDoc(collection(fs,"recharges"),{
-      uid:auth.currentUser.uid,a:a,m:mode+" · "+esc(p)+" · ID "+esc(t),t:D(),ts:Date.now(),s:"En attente"
-    });
-
-    if(isFirstRecharge && ud && ud.ref) {
-      const parrainQuery = query(collection(fs, "users"), where("phone", "==", ud.ref));
-      const parrainSnap = await getDocs(parrainQuery);
-      if(!parrainSnap.empty) {
-        const parrainDocSnap = parrainSnap.docs[0];
-        const parrainRef = doc(fs, "users", parrainDocSnap.id);
-        await runTransaction(fs, async tr => {
-          const pData = (await tr.get(parrainRef)).data();
-          tr.update(parrainRef, { bal: (pData.bal || 0) + 600 });
-        });
-      }
-    }
-
-    alert("✅ Demande envoyée ! En attente de validation.");
-    go("histRec");
-  }catch(e){err("Erreur : "+e.message)}
-}
-
-async function doWd(){
-  const a=+$("a"),p=$("pn"),ref=doc(fs,"users",auth.currentUser.uid);
-  if(a<1000)return err("Montant minimum : 1 000 F.");
-  if(p.length<8)return err("Entre un numéro valide.");
-  try{
-    await runTransaction(fs,async t=>{
-      const b=(await t.get(ref)).data().bal;
-      if(b<a)throw{message:"Solde insuffisant."};
-      t.update(ref,{bal:b-a});
-      t.set(doc(collection(fs,"withdrawals")),{uid:auth.currentUser.uid,a,m:esc(p),t:D(),ts:Date.now(),s:"En attente"})
-    });
-    alert("✅ Demande de retrait envoyée !");
-    go("histRet");
-  }catch(e){err(e.message)}
-}
-
-async function doLink(){
-  const p=$("pn");
-  if(p.length<8)return err("Entre un numéro valide.");
-  await updateDoc(doc(fs,"users",auth.currentUser.uid),{card:{m:$("m"),num:p}},{merge:true});
-  alert("✅ Compte lié avec succès !");
-  go("card");
-}
-
-Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink,tournerRoue,reclamerMesGains});
-render();
-</script>
-</body>
-</html>
+  `<b
