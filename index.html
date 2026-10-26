@@ -387,4 +387,80 @@ method:()=>`${back("recharge")}<h2>Choisir la méthode</h2><p class="mu">Montant
   `<button class="li wave" onclick="go('payWave')"><b>Wave</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #ffcc00;" onclick="go('payMTN')"><b>MTN Money</b><span>›</span></button>`+
   `<button class="li" style="border: 2px solid #00a859;" onclick="go('payMoov')"><b>Moov Money</b><span>›</span></button>`+
-  `<b
+  `<button class="li off" onclick="err('Orange Money est actuellement indisponible.')"><b>Orange Money</b><span>Indisponible</span></button>`+
+  `<div id="err" class="err"></div>`,
+
+payWave:()=>`${back("method")}<h2>Paiement Wave</h2>
+<div class="card wave">
+  <p style="margin-top:0">Veuillez payer pour Avenir en cliquant sur le lien ci-dessous :</p>
+  <a class="btn" style="margin-bottom:12px;" href="${PAY_LINK}" target="_blank" rel="noopener">Payer via Jeko Africa</a>
+  <p class="mu">Ou copiez le numéro pour effectuer votre paiement de <b>${F(T.amt)}</b> :</p>
+  <div class="row"><span class="num">${WAVE_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${WAVE_NUM}')">Copier</button></div>
+</div>
+<div class="card">
+  <label>Votre numéro de paiement</label><input id="pn" type="tel">
+  <label>ID de la transaction</label><input id="tx">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="confirmPay('Wave')">Confirmer le paiement</button>
+</div>`,
+
+payMTN:()=>`${back("method")}<h2>Paiement MTN Money</h2>
+<div class="card" style="border:2px solid #ffcc00">
+  <p class="mu">Effectuez votre dépôt MTN Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
+  <div class="row"><span class="num">${MTN_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MTN_NUM}')">Copier</button></div>
+</div>
+<div class="card">
+  <label>Votre numéro de paiement</label><input id="pn" type="tel">
+  <label>ID de la transaction</label><input id="tx">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="confirmPay('MTN Money')">Confirmer le paiement</button>
+</div>`,
+
+payMoov:()=>`${back("method")}<h2>Paiement Moov Money</h2>
+<div class="card" style="border:2px solid #00a859">
+  <p class="mu">Effectuez votre dépôt Moov Money de <b>${F(T.amt)}</b> vers le numéro ci-dessous :</p>
+  <div class="row"><span class="num">${MOOV_NUM}</span><button class="btn sec" style="width:auto;padding:10px 14px" onclick="copyN('${MOOV_NUM}')">Copier</button></div>
+</div>
+<div class="card">
+  <label>Votre numéro de paiement</label><input id="pn" type="tel">
+  <label>ID de la transaction</label><input id="tx">
+  <div id="err" class="err"></div>
+  <button class="btn" onclick="confirmPay('Moov Money')">Confirmer le paiement</button>
+</div>`,
+
+histRec:()=>`<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge."),
+withdraw:()=>{const c=ud.card||null;return`${back()}<h2>Retirer</h2><div class="card"><p class="mu">Solde : ${F(ud.bal)}</p><label>Montant (minimum 1 000 F)</label><input id="a" type="number" inputmode="numeric"><label>Votre numéro</label><input id="pn" type="tel" value="${c?esc(c.num):""}"><div id="err" class="err"></div><button class="btn" onclick="doWd()">Confirmer le retrait</button></div>`},
+histRet:()=>`<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait."),
+link:()=>`${back("account")}<h2>Lier mon compte de retrait</h2><div class="card"><label>Méthode</label><select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select><label>Numéro</label><input id="pn" type="tel"><div id="err" class="err"></div><button class="btn" onclick="doLink()">Confirmer</button></div>`,
+card:()=>{const c=ud.card||null;return`${back("account")}<h2>Ma carte bancaire</h2>`+(c?`<div class="hero"><small>${esc(c.m)}</small><b>${esc(c.num)}</b><small>${esc(ud.name)}</small></div>`:`<p class="mu">Aucun compte lié.</p><button class="btn" onclick="go('link')">Lier un compte</button>`)},
+service:()=>`${back("account")}<h2>Service client</h2><div class="card"><p class="mu">Une question ? Écrivez-nous sur WhatsApp.</p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="${SUPPORT}" target="_blank" rel="noopener">Contacter sur WhatsApp</a><p class="mu" style="margin-top:10px">Disponible tous les jours.</p></div>`
+};
+
+function render(){
+ const app=document.getElementById("app"),n=document.getElementById("nav");
+ if(loading){app.innerHTML='<p class="mu">Chargement…</p>';n.style.display="none";return}
+ if(!ud && P!="login")P="signup";
+ if(ud && (P=="signup"||P=="login"))P="home";
+ app.innerHTML=pages[P]();
+ const tabs=[["home","🏠","Accueil"],["invest","📈","Investir"],["achats","🧾","Achats"],["team","👥","Équipe"],["account","👤","Compte"]];
+ n.style.display=ud?"flex":"none";
+ n.innerHTML=tabs.map(t=>`<button class="${t[0]==P?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
+ if (ud && P === "home") checkAndUpdateButton();
+}
+
+onAuthStateChanged(auth, u=>{
+ unsubs.forEach(f=>f());unsubs=[];ud=null;recs=[];rets=[];buys=[];teamN=0;
+ if(!u){loading=false;P="login";render();return}
+ const L=(c,set)=>unsubs.push(onSnapshot(query(collection(fs, "users", u.uid, c)),s=>{set(s.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0)));render()}));
+ unsubs.push(onSnapshot(doc(fs,"users",u.uid),s=>{if(s.exists()){
+  ud={...s.data(),id:u.uid};loading=false;
+  if(!unsubs.team){unsubs.team=1;unsubs.push(onSnapshot(query(collection(fs,"users"),where("ref","==",getUrlParam('ref')||"GTHZS")),q=>{teamN=q.size;render()}))}
+  render()}}));
+ L("recs",x=>recs=x);L("rets",x=>rets=x);L("buys",x=>buys=x);
+});
+
+Object.assign(window,{go,err,signup,login,logout,buy,toMethod,confirmPay,doWd,doLink,checkAndUpdateButton,reclamerMesGains});
+render();
+</script>
+</body>
+</html>
