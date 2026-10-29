@@ -22,6 +22,7 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{background:#374151;cursor:not-allowed;opacity:0.7}
 .btn.sec{background:rgba(16,185,129,0.15);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff}
+.btn-wa{background:#25D366;color:#fff;margin-bottom:12px}
 .btn-sm{width:auto;padding:10px 20px;font-size:15px;border-radius:8px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .grid button{padding:16px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600}
@@ -51,7 +52,7 @@ const WAVE_NUM="0509302107";
 const MOOV_NUM="0104217547";
 const MTN_NUM="0545576710";
 const SUPPORT="https://wa.me/message/ABZ2BRFJPVIOE1";
-const PAY_LINK="https://pay.jeko.africa/pl/4f580acc-5df9-440e-b168-6beb65823bea";
+const WA_GROUP="https://chat.whatsapp.com/GJkaaZhk51y0VpbNPfEbms?s=cl&p=a&mlu=4&ilr=4&iam=2";
 const BASE_REF_LINK="https://nouveauprojetavenir-debug.github.io/Nouveau-projet-avenir-capital-/";
 
 const VIP=[
@@ -69,7 +70,7 @@ const VIP=[
 const METH=["Wave","MTN Money","Moov Money"];
 const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
-let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="signup",T={};
+let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="login",T={};
 let hasGainsAvailable = false;
 
 const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
@@ -86,7 +87,7 @@ window.go = function(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)};
 function err(m){const e=document.getElementById("err");if(e)e.textContent=m}
 const msg=e=>({"auth/email-already-in-use":"Ce numéro est déjà inscrit.","auth/invalid-credential":"Numéro ou mot de passe incorrect.","auth/weak-password":"Mot de passe : 6 caractères minimum."}[e.code]||("Erreur : "+(e.code||e.message)));
 const back=(p="home")=>`<button class="back" onclick="go('${p}')">‹ Retour</button>`;
-const hist=(a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
+const hist=(a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m||'Retrait'} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
 
 window.copyN = function(num){
   navigator.clipboard.writeText(num).then(()=>alert("✅ Numéro copié !")).catch(()=>alert(num))
@@ -240,7 +241,6 @@ window.buy = async function(idx) {
     const snap = await getDocs(buysRef);
     let activeCount = 0;
     const now = Date.now();
-    const msPerDay = 86400000;
     
     for (const d of snap.docs) {
       const bData = d.data();
@@ -384,7 +384,7 @@ const pages={
       <button class="li" onclick="go('achats')">📦 Mes sacs achetés <span>›</span></button>
       <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
       <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
-      <button class="li" onclick="go('service')">Service client <span>›</span></button>
+      <button class="li" onclick="go('service')">Service client & Groupe <span>›</span></button>
 
       <div style="margin-top: 24px; margin-bottom: 20px;">
         <button class="btn out" onclick="logout()">Se déconnecter</button>
@@ -402,8 +402,4 @@ const pages={
 
   recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><p class="mu">Entrez le montant à recharger (Min. 1 000 F)</p><input id="a" type="number" placeholder="Ex: 10000"><div id="err" class="err"></div><button class="btn" onclick="toMethod()">Continuer</button></div>`,
 
-  method:()=>`${back()}<h2>Choisir le mode de paiement</h2><div class="card"><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+METH.map(m=>`<button class="btn sec" style="margin-bottom:10px;" onclick="go('payDetails',{m:'${m}'})">${m}</button>`).join("")+`</div>`,
-
-  payDetails:()=>{
-    const m = T.m;
-    let num 
+  method:()=>`${back()}<h2>Choisir le mode de paiement</h2><div class="card"><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+METH.map(m=>`<button class="btn sec" style="margin-bottom:10px;" onclick="go('payDetails',{m:'${m}'})">${m}</button>`).join("")+`</
