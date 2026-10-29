@@ -22,6 +22,7 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{background:#374151;cursor:not-allowed;opacity:0.7}
 .btn.sec{background:rgba(16,185,129,0.15);color:var(--pr)}.btn.out{background:none;border:1px solid var(--er);color:var(--er)}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff}
+.btn-wa{background:#25D366;color:#fff;margin-bottom:12px}
 .btn-sm{width:auto;padding:10px 20px;font-size:15px;border-radius:8px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .grid button{padding:16px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600}
@@ -40,10 +41,11 @@ nav span{display:block;font-size:20px}
 </style>
 </head>
 <body><div id="app"></div><nav id="nav"></nav>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,setDoc,onSnapshot,collection,query,where,addDoc,runTransaction,updateDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,setDoc,onSnapshot,collection,addDoc,runTransaction,updateDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyC8jUCtIrHrySXzNAXTdRTaCBTNgEirS8w",authDomain:"avenir-capital.firebaseapp.com",projectId:"avenir-capital",storageBucket:"avenir-capital.firebasestorage.app",messagingSenderId:"565430762059",appId:"1:565430762059:web:3c7d536d55d3277d35ebce"};
 
@@ -51,7 +53,7 @@ const WAVE_NUM="0509302107";
 const MOOV_NUM="0104217547";
 const MTN_NUM="0545576710";
 const SUPPORT="https://wa.me/message/ABZ2BRFJPVIOE1";
-const PAY_LINK="https://pay.jeko.africa/pl/4f580acc-5df9-440e-b168-6beb65823bea";
+const WA_GROUP="https://chat.whatsapp.com/GJkaaZhk51y0VpbNPfEbms?s=cl&p=a&mlu=4&ilr=4&iam=2";
 const BASE_REF_LINK="https://nouveauprojetavenir-debug.github.io/Nouveau-projet-avenir-capital-/";
 
 const VIP=[
@@ -69,10 +71,9 @@ const VIP=[
 const METH=["Wave","MTN Money","Moov Money"];
 const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
-let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="signup",T={};
+let ud=null,recs=[],rets=[],buys=[],teamN=0,unsubs=[],P="login",T={};
 let hasGainsAvailable = false;
 
-const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
 const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n||0).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleDateString("fr-FR");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id).value.trim();
@@ -86,7 +87,7 @@ window.go = function(p,t){P=p;if(t)Object.assign(T,t);render();scrollTo(0,0)};
 function err(m){const e=document.getElementById("err");if(e)e.textContent=m}
 const msg=e=>({"auth/email-already-in-use":"Ce numéro est déjà inscrit.","auth/invalid-credential":"Numéro ou mot de passe incorrect.","auth/weak-password":"Mot de passe : 6 caractères minimum."}[e.code]||("Erreur : "+(e.code||e.message)));
 const back=(p="home")=>`<button class="back" onclick="go('${p}')">‹ Retour</button>`;
-const hist=(a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
+const hist=(a,empty)=>a.length?a.map(x=>`<div class="card row"><div><b>${F(x.a)}</b><div class="mu">${x.m||'Retrait'} · ${x.t}</div></div><span class="tag">${x.s||"En attente"}</span></div>`).join(""):`<p class="mu">${empty}</p>`;
 
 window.copyN = function(num){
   navigator.clipboard.writeText(num).then(()=>alert("✅ Numéro copié !")).catch(()=>alert(num))
@@ -239,8 +240,6 @@ window.buy = async function(idx) {
     const buysRef = collection(fs, "users", user.uid, "buys");
     const snap = await getDocs(buysRef);
     let activeCount = 0;
-    const now = Date.now();
-    const msPerDay = 86400000;
     
     for (const d of snap.docs) {
       const bData = d.data();
@@ -266,7 +265,7 @@ window.buy = async function(idx) {
 
     await addDoc(collection(fs, "users", user.uid, "buys"), {
       n: item.n, p: item.p, d: item.d, days: item.days,
-      t: D(), createdAt: now, lastClaim: now, daysPaid: 0
+      t: D(), createdAt: Date.now(), lastClaim: Date.now(), daysPaid: 0
     });
     alert("✅ Achat du " + item.n + " réussi !");
     setTimeout(() => checkAndUpdateButton(), 500);
@@ -384,7 +383,7 @@ const pages={
       <button class="li" onclick="go('achats')">📦 Mes sacs achetés <span>›</span></button>
       <button class="li" onclick="go('histRec')">Historique des recharges <span>›</span></button>
       <button class="li" onclick="go('histRet')">Historique des retraits <span>›</span></button>
-      <button class="li" onclick="go('service')">Service client <span>›</span></button>
+      <button class="li" onclick="go('service')">Service client & Groupe <span>›</span></button>
 
       <div style="margin-top: 24px; margin-bottom: 20px;">
         <button class="btn out" onclick="logout()">Se déconnecter</button>
@@ -407,141 +406,4 @@ const pages={
   payDetails:()=>{
     const m = T.m;
     let num = WAVE_NUM;
-    if(m.includes("MTN")) num = MTN_NUM;
-    if(m.includes("Moov")) num = MOOV_NUM;
-    return `${back()}<h2>Paiement ${m}</h2>
-    <div class="card">
-      <p class="mu">1. Cliquez sur le lien de paiement sécurisé Jeko ci-dessous ou effectuez un transfert direct au numéro indiqué.</p>
-      <a href="${PAY_LINK}" target="_blank" class="btn btn-gold" style="margin-bottom:12px;text-align:center;">Payer via Jeko (Sécurisé)</a>
-      <p class="mu">2. Ou transférez directement ${F(T.amt)} au numéro ${m} ci-dessous :</p>
-      <div class="row card" style="background:var(--bg);margin:10px 0;">
-        <b class="num">${num}</b>
-        <button class="btn btn-sm" onclick="copyN('${num}')">Copier</button>
-      </div>
-      <label>Votre numéro de téléphone expéditeur</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
-      <label>ID de transaction / Référence</label><input id="tx" placeholder="Ex: TX-12345678">
-      <div id="err" class="err"></div>
-      <button class="btn" onclick="confirmPay('${m}')">J'ai effectué le paiement</button>
-    </div>`;
-  },
-
-  withdraw:()=>{
-    const u = U();
-    const cardInfo = u.card ? `${u.card.m} - ${u.card.num}` : '<span style="color:var(--er)">Veuillez d\'abord lier un portefeuille</span>';
-    return `${back()}<h2>Retirer des fonds</h2>
-    <div class="card">
-      <p class="mu">Portefeuille de retrait : <b>${cardInfo}</b></p>
-      <label>Montant du retrait (Min. 1 000 F)</label><input id="a" type="number" placeholder="Ex: 5000">
-      <label>Numéro de réception</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
-      <div id="err" class="err"></div>
-      <button class="btn" onclick="doWd()" ${!u.card?'disabled':''}>Confirmer le retrait</button>
-    </div>`;
-  },
-
-  card:()=>{
-    const u = U();
-    const cur = u.card || {};
-    return `${back()}<h2>Lier un portefeuille</h2>
-    <div class="card">
-      <p class="mu">Choisissez votre opérateur de retrait.</p>
-      <label>Opérateur</label>
-      <select id="m">${METH.map(m=>`<option ${cur.m===m?'selected':''}>${m}</option>`).join("")}</select>
-      <label>Numéro de téléphone</label><input id="pn" type="tel" value="${esc(cur.num||'')}" placeholder="Ex: 0700000000">
-      <div id="err" class="err"></div>
-      <button class="btn" onclick="doLink()">Enregistrer le portefeuille</button>
-    </div>`;
-  },
-
-  team:()=>{
-    const u=U();
-    const refLink = `${BASE_REF_LINK}?ref=${u.phone}`;
-    return `${back()}<h2>Mon équipe & Parrainage</h2>
-    <div class="card">
-      <p class="mu">Partagez votre lien d'invitation pour gagner des commissions sur votre réseau.</p>
-      <label>Votre lien de parrainage</label>
-      <input readonly value="${refLink}" style="font-size:12px">
-      <button class="btn" onclick="copyLink('${refLink}')">Copier le lien</button>
-    </div>
-    <div class="card">
-      <h3>Statistiques de l'équipe</h3>
-      <p class="mu">Membres invités : <b>${teamN}</b></p>
-    </div>`;
-  },
-
-  achats:()=>{
-    const u = U();
-    return `${back()}<h2>Mes sacs achetés</h2>` + (u.buys && u.buys.length ? u.buys.map(b=>{
-      const left = Math.max(0, b.days - (b.daysPaid || 0));
-      return `<div class="card">
-        <div class="row"><b>${esc(b.n)}</b><span class="tag">${left > 0 ? 'Actif' : 'Terminé'}</span></div>
-        <p class="mu">Prix d'achat : ${F(b.p)} · Gain journalier : ${F(b.d)}</p>
-        <p class="mu">Jours payés : ${b.daysPaid || 0} / ${b.days} jours</p>
-        <p class="mu">Acheté le : ${b.t}</p>
-      </div>`;
-    }).join("") : `<p class="mu">Vous n'avez pas encore acheté de sacs d'investissement.</p>`);
-  },
-
-  histRec:()=>`${back()}<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge pour le moment."),
-  histRet:()=>`${back()}<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait pour le moment."),
-
-  service:()=>`${back()}<h2>Service Client</h2><div class="card" style="text-align:center"><p class="mu">Besoin d'aide ? Contactez notre support officiel sur WhatsApp.</p><a href="${SUPPORT}" target="_blank" class="btn" style="margin-top:10px">Contacter le support WhatsApp</a></div>`
-};
-
-function render(){
-  const app=document.getElementById("app"), nav=document.getElementById("nav");
-  if(loading){
-    app.innerHTML=`<div style="text-align:center;padding:50px 0;"><h2 style="color:var(--pr);">Avenir Capital</h2><p class="mu">Chargement en cours...</p></div>`;
-    nav.innerHTML="";
-    return;
-  }
-  if(!auth.currentUser){
-    app.innerHTML=pages[P]?pages[P]():pages.signup();
-    nav.innerHTML="";
-    return;
-  }
-  app.innerHTML=pages[P]?pages[P]():pages.home();
-  nav.innerHTML=`
-    <button class="${P==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Accueil</button>
-    <button class="${P==='invest'?'on':''}" onclick="go('invest')"><span>📈</span>Investir</button>
-    <button class="${P==='team'?'on':''}" onclick="go('team')"><span>👥</span>Équipe</button>
-    <button class="${P==='service'?'on':''}" onclick="go('service')"><span>💬</span>Support</button>
-  `;
-}
-
-onAuthStateChanged(auth, async user=>{
-  unsubs.forEach(fn=>fn());
-  unsubs=[];
-  if(user){
-    unsubs.push(onSnapshot(doc(fs,"users",user.uid), d=>{
-      ud=d.data()||{};
-      loading=false;
-      checkAndUpdateButton();
-      render();
-    }));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"recs"), s=>{
-      recs=s.docs.map(x=>x.data());
-      render();
-    }));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"rets"), s=>{
-      rets=s.docs.map(x=>x.data());
-      render();
-    }));
-    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"buys"), s=>{
-      buys=s.docs.map(x=>x.data());
-      render();
-    }));
-    try {
-      const tSnap=await getDocs(query(collection(fs,"users"),where("ref","==",ud?.phone||"")));
-      teamN=tSnap.size;
-    } catch{}
-  } else {
-    ud=null; recs=[]; rets=[]; buys=[]; teamN=0;
-    loading=false;
-    render();
-  }
-});
-
-render();
-</script>
-</body>
-</html>
+    if(m === "Moov Money") nu
