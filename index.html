@@ -57,11 +57,13 @@ const BASE_REF_LINK="https://nouveauprojetavenir-debug.github.io/Nouveau-projet-
 const VIP=[
   {n:"VIP1 Sac Découverte", p:5000, d:500, days:7, total:8500, benef:3500, img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80"},
   {n:"VIP2 Sac Essentiel", p:10000, d:1000, days:15, total:25000, benef:15000, img:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80"},
-  {n:"VIP3 Sac Croissance", p:50000, d:500, days:20, total:80000, benef:30000, img:"https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=600&q=80"},
+  {n:"VIP3 Sac Croissance", p:50000, d:1130, days:20, total:72600, benef:22600, img:"https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=600&q=80"},
   {n:"VIP4 Sac Premium", p:100000, d:2000, days:30, total:160000, benef:60000, img:"https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80"},
   {n:"VIP5 Sac Excellence", p:200000, d:3000, days:45, total:450000, benef:250000, img:"https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=600&q=80"},
   {n:"VIP6 Sac Prestige", p:500000, d:2250, days:60, total:635000, benef:135000, img:"https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=600&q=80"},
-  {n:"VIP7 Sac Élite", p:1000000, d:5000, days:90, total:1450000, benef:450000, img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80"}
+  {n:"VIP7 Sac Élite", p:1000000, d:5000, days:90, total:1450000, benef:450000, img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80"},
+  {n:"VIP8 Sac Premium", p:4000, d:343, days:12, total:8116, benef:4116, img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80"},
+  {n:"VIP9 Sac Excellence", p:3500, d:250, days:23, total:9250, benef:5750, img:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80"}
 ];
 
 const METH=["Wave","MTN Money","Moov Money"];
@@ -410,114 +412,135 @@ const pages={
     return `${back()}<h2>Paiement ${m}</h2>
     <div class="card">
       <p class="mu">1. Cliquez sur le lien de paiement sécurisé Jeko ci-dessous ou effectuez un transfert direct au numéro indiqué.</p>
-      <a href="${PAY_LINK}" target="_blank" class="btn btn-gold" style="margin-bottom:14px;">Lien de paiement Jeko (Recommandé)</a>
-      <hr style="border-color:var(--bd);margin:14px 0;">
-      <p class="mu">Ou transfert direct par ${m} :</p>
-      <div class="row" style="background:var(--bg);padding:10px;border-radius:8px;margin-bottom:10px;">
-        <span class="num">${num}</span>
+      <a href="${PAY_LINK}" target="_blank" class="btn btn-gold" style="margin-bottom:12px;text-align:center;">Payer via Jeko (Sécurisé)</a>
+      <p class="mu">2. Ou transférez directement ${F(T.amt)} au numéro ${m} ci-dessous :</p>
+      <div class="row card" style="background:var(--bg);margin:10px 0;">
+        <b class="num">${num}</b>
         <button class="btn btn-sm" onclick="copyN('${num}')">Copier</button>
       </div>
-      <p class="mu">2. Une fois le paiement effectué, remplissez les informations ci-dessous :</p>
-      <label>Votre numéro ${m} utilisé</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
-      <label>ID de transaction / Référence</label><input id="tx" placeholder="Ex: TX12345678">
+      <label>Votre numéro de téléphone expéditeur</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
+      <label>ID de transaction / Référence</label><input id="tx" placeholder="Ex: TX-12345678">
       <div id="err" class="err"></div>
-      <button class="btn" onclick="confirmPay('${m}')">J'ai payé, valider</button>
+      <button class="btn" onclick="confirmPay('${m}')">J'ai effectué le paiement</button>
     </div>`;
   },
 
-  withdraw:()=>`${back()}<h2>Retirer des fonds</h2>
-  <div class="card">
-    <p class="mu">Solde actuel : <b>${F(me.bal)}</b></p>
-    <label>Montant du retrait (Min. 1 000 F)</label><input id="a" type="number" placeholder="Ex: 5000">
-    <label>Numéro de réception</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
-    <div id="err" class="err"></div>
-    <button class="btn" onclick="doWd()">Effectuer le retrait</button>
-  </div>`,
+  withdraw:()=>{
+    const u = U();
+    const cardInfo = u.card ? `${u.card.m} - ${u.card.num}` : '<span style="color:var(--er)">Veuillez d\'abord lier un portefeuille</span>';
+    return `${back()}<h2>Retirer des fonds</h2>
+    <div class="card">
+      <p class="mu">Portefeuille de retrait : <b>${cardInfo}</b></p>
+      <label>Montant du retrait (Min. 1 000 F)</label><input id="a" type="number" placeholder="Ex: 5000">
+      <label>Numéro de réception</label><input id="pn" type="tel" placeholder="Ex: 0700000000">
+      <div id="err" class="err"></div>
+      <button class="btn" onclick="doWd()" ${!u.card?'disabled':''}>Confirmer le retrait</button>
+    </div>`;
+  },
 
-  card:()=>`${back()}<h2>Portefeuille de retrait</h2>
-  <div class="card">
-    <label>Méthode de paiement</label>
-    <select id="m">${METH.map(m=>`<option>${m}</option>`).join("")}</select>
-    <label>Numéro de compte</label><input id="pn" type="tel" placeholder="Ex: 0700000000" value="${me.card?me.card.num:''}">
-    <div id="err" class="err"></div>
-    <button class="btn" onclick="doLink()">Enregistrer</button>
-  </div>`,
+  card:()=>{
+    const u = U();
+    const cur = u.card || {};
+    return `${back()}<h2>Lier un portefeuille</h2>
+    <div class="card">
+      <p class="mu">Choisissez votre opérateur de retrait.</p>
+      <label>Opérateur</label>
+      <select id="m">${METH.map(m=>`<option ${cur.m===m?'selected':''}>${m}</option>`).join("")}</select>
+      <label>Numéro de téléphone</label><input id="pn" type="tel" value="${esc(cur.num||'')}" placeholder="Ex: 0700000000">
+      <div id="err" class="err"></div>
+      <button class="btn" onclick="doLink()">Enregistrer le portefeuille</button>
+    </div>`;
+  },
 
-  team:()=>`${back()}<h2>Mon équipe & Parrainage</h2>
-  <div class="card" style="text-align:center;">
-    <p class="mu">Partagez votre lien d'invitation :</p>
-    <div style="background:var(--bg);padding:10px;border-radius:8px;font-size:13px;word-break:break-all;margin-bottom:10px;">${BASE_REF_LINK}?ref=${me.phone||''}</div>
-    <button class="btn btn-sm" onclick="copyLink('${BASE_REF_LINK}?ref=${me.phone||''}')">Copier le lien</button>
-  </div>
-  <div class="card row"><div><b>Membres de l'équipe</b><div class="mu">Niveau 1</div></div><span class="tag">${teamN} Filleuls</span></div>`,
+  team:()=>{
+    const u=U();
+    const refLink = `${BASE_REF_LINK}?ref=${u.phone}`;
+    return `${back()}<h2>Mon équipe & Parrainage</h2>
+    <div class="card">
+      <p class="mu">Partagez votre lien d'invitation pour gagner des commissions sur votre réseau.</p>
+      <label>Votre lien de parrainage</label>
+      <input readonly value="${refLink}" style="font-size:12px">
+      <button class="btn" onclick="copyLink('${refLink}')">Copier le lien</button>
+    </div>
+    <div class="card">
+      <h3>Statistiques de l'équipe</h3>
+      <p class="mu">Membres invités : <b>${teamN}</b></p>
+    </div>`;
+  },
 
-  achats:()=>`${back()}<h2>Mes sacs achetés</h2>`+hist(buys.map(x=>({...x, m: `Acheté le ${x.t} · Reste ${Math.max(0, x.days - (x.daysPaid||0))} jours`})),"Vous n'avez aucun sac actif."),
-  histRec:()=>`${back()}<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge effectuée."),
-  histRet:()=>`${back()}<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait effectué."),
-  service:()=>`${back()}<h2>Service client</h2><div class="card" style="text-align:center;"><p class="mu">Besoin d'aide ? Contactez notre support disponible 7j/7 sur WhatsApp.</p><a href="${SUPPORT}" target="_blank" class="btn" style="background:#25D366;">Ouvrir le support WhatsApp</a></div>`
+  achats:()=>{
+    const u = U();
+    return `${back()}<h2>Mes sacs achetés</h2>` + (u.buys && u.buys.length ? u.buys.map(b=>{
+      const left = Math.max(0, b.days - (b.daysPaid || 0));
+      return `<div class="card">
+        <div class="row"><b>${esc(b.n)}</b><span class="tag">${left > 0 ? 'Actif' : 'Terminé'}</span></div>
+        <p class="mu">Prix d'achat : ${F(b.p)} · Gain journalier : ${F(b.d)}</p>
+        <p class="mu">Jours payés : ${b.daysPaid || 0} / ${b.days} jours</p>
+        <p class="mu">Acheté le : ${b.t}</p>
+      </div>`;
+    }).join("") : `<p class="mu">Vous n'avez pas encore acheté de sacs d'investissement.</p>`);
+  },
+
+  histRec:()=>`${back()}<h2>Historique des recharges</h2>`+hist(recs,"Aucune recharge pour le moment."),
+  histRet:()=>`${back()}<h2>Historique des retraits</h2>`+hist(rets,"Aucun retrait pour le moment."),
+
+  service:()=>`${back()}<h2>Service Client</h2><div class="card" style="text-align:center"><p class="mu">Besoin d'aide ? Contactez notre support officiel sur WhatsApp.</p><a href="${SUPPORT}" target="_blank" class="btn" style="margin-top:10px">Contacter le support WhatsApp</a></div>`
 };
-
-function navBar(){
-  if(["signup","login","method","payDetails"].includes(P)) return "";
-  const items=[
-    {id:"home",l:"Accueil",i:"🏠"},
-    {id:"invest",l:"Investir",i:"📈"},
-    {id:"achats",l:"Mes sacs",i:"📦"},
-    {id:"team",l:"Équipe",i:"👥"},
-    {id:"service",l:"Support",i:"💬"}
-  ];
-  return items.map(x=>`<button class="${P===x.id?"on":""}" onclick="go('${x.id}')"><span>${x.i}</span>${x.l}</button>`).join("");
-}
 
 function render(){
   const app=document.getElementById("app"), nav=document.getElementById("nav");
   if(loading){
-    app.innerHTML=`<div style="text-align:center;padding:50px 0;"><p class="mu">Chargement en cours...</p></div>`;
+    app.innerHTML=`<div style="text-align:center;padding:50px 0;"><h2 style="color:var(--pr);">Avenir Capital</h2><p class="mu">Chargement en cours...</p></div>`;
     nav.innerHTML="";
     return;
   }
-  if(!auth.currentUser && !["signup","login"].includes(P)) P="signup";
-  if(auth.currentUser && ["signup","login"].includes(P)) P="home";
-  
-  app.innerHTML=(pages[P]||pages.home)();
-  nav.innerHTML=navBar();
-  if(P === "home") {
-    checkAndUpdateButton();
+  if(!auth.currentUser){
+    app.innerHTML=pages[P]?pages[P]():pages.signup();
+    nav.innerHTML="";
+    return;
   }
+  app.innerHTML=pages[P]?pages[P]():pages.home();
+  nav.innerHTML=`
+    <button class="${P==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Accueil</button>
+    <button class="${P==='invest'?'on':''}" onclick="go('invest')"><span>📈</span>Investir</button>
+    <button class="${P==='team'?'on':''}" onclick="go('team')"><span>👥</span>Équipe</button>
+    <button class="${P==='service'?'on':''}" onclick="go('service')"><span>💬</span>Support</button>
+  `;
 }
 
 onAuthStateChanged(auth, async user=>{
   unsubs.forEach(fn=>fn());
   unsubs=[];
   if(user){
-    unsubs.push(onSnapshot(doc(fs, "users", user.uid), d=>{
+    unsubs.push(onSnapshot(doc(fs,"users",user.uid), d=>{
       ud=d.data()||{};
       loading=false;
+      checkAndUpdateButton();
       render();
     }));
-    unsubs.push(onSnapshot(collection(fs, "users", user.uid, "recs"), s=>{
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"recs"), s=>{
       recs=s.docs.map(x=>x.data());
       render();
     }));
-    unsubs.push(onSnapshot(collection(fs, "users", user.uid, "rets"), s=>{
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"rets"), s=>{
       rets=s.docs.map(x=>x.data());
       render();
     }));
-    unsubs.push(onSnapshot(collection(fs, "users", user.uid, "buys"), s=>{
+    unsubs.push(onSnapshot(collection(fs,"users",user.uid,"buys"), s=>{
       buys=s.docs.map(x=>x.data());
       render();
     }));
-    if(ud && ud.phone){
-      const q = query(collection(fs, "users"), where("ref", "==", ud.phone));
-      const teamSnap = await getDocs(q);
-      teamN = teamSnap.size;
-    }
-  }else{
+    try {
+      const tSnap=await getDocs(query(collection(fs,"users"),where("ref","==",ud?.phone||"")));
+      teamN=tSnap.size;
+    } catch{}
+  } else {
     ud=null; recs=[]; rets=[]; buys=[]; teamN=0;
     loading=false;
     render();
   }
 });
+
 render();
 </script>
 </body>
