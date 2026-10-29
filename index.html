@@ -41,10 +41,11 @@ nav span{display:block;font-size:20px}
 </style>
 </head>
 <body><div id="app"></div><nav id="nav"></nav>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,setDoc,onSnapshot,collection,query,where,addDoc,runTransaction,updateDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,setDoc,onSnapshot,collection,addDoc,runTransaction,updateDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyC8jUCtIrHrySXzNAXTdRTaCBTNgEirS8w",authDomain:"avenir-capital.firebaseapp.com",projectId:"avenir-capital",storageBucket:"avenir-capital.firebasestorage.app",messagingSenderId:"565430762059",appId:"1:565430762059:web:3c7d536d55d3277d35ebce"};
 
@@ -70,10 +71,9 @@ const VIP=[
 const METH=["Wave","MTN Money","Moov Money"];
 const auth=getAuth(initializeApp(firebaseConfig)),fs=getFirestore();
 const em=p=>p.replace(/\D/g,"")+"@avenir.app";
-let ud=null,recs=[],rets=[],buys=[],teamN=0,allUsers=[],unsubs=[],loading=true,P="login",T={};
+let ud=null,recs=[],rets=[],buys=[],teamN=0,unsubs=[],P="login",T={};
 let hasGainsAvailable = false;
 
-const me=new Proxy({},{get:(_,k)=>(ud||{})[k]});
 const U=()=>ud&&{...ud,recs,rets,buys},F=n=>Number(n||0).toLocaleString("fr-FR")+" F",D=()=>new Date().toLocaleDateString("fr-FR");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id).value.trim();
@@ -240,7 +240,6 @@ window.buy = async function(idx) {
     const buysRef = collection(fs, "users", user.uid, "buys");
     const snap = await getDocs(buysRef);
     let activeCount = 0;
-    const now = Date.now();
     
     for (const d of snap.docs) {
       const bData = d.data();
@@ -266,7 +265,7 @@ window.buy = async function(idx) {
 
     await addDoc(collection(fs, "users", user.uid, "buys"), {
       n: item.n, p: item.p, d: item.d, days: item.days,
-      t: D(), createdAt: now, lastClaim: now, daysPaid: 0
+      t: D(), createdAt: Date.now(), lastClaim: Date.now(), daysPaid: 0
     });
     alert("✅ Achat du " + item.n + " réussi !");
     setTimeout(() => checkAndUpdateButton(), 500);
@@ -327,7 +326,7 @@ window.doLink = async function(){
     await updateDoc(doc(fs, "users", user.uid), { card: { m, num } });
     alert("✅ Compte de retrait lié avec succès !");
     go("home");
-  } catch(e) { err(e.message); }
+  } catch(e) { err(e.image); }
 };
 
 const pages={
@@ -402,4 +401,9 @@ const pages={
 
   recharge:()=>`${back()}<h2>Recharger</h2><div class="card"><p class="mu">Entrez le montant à recharger (Min. 1 000 F)</p><input id="a" type="number" placeholder="Ex: 10000"><div id="err" class="err"></div><button class="btn" onclick="toMethod()">Continuer</button></div>`,
 
-  method:()=>`${back()}<h2>Choisir le mode de paiement</h2><div class="card"><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+METH.map(m=>`<button class="btn sec" style="margin-bottom:10px;" onclick="go('payDetails',{m:'${m}'})">${m}</button>`).join("")+`</
+  method:()=>`${back()}<h2>Choisir le mode de paiement</h2><div class="card"><p class="mu">Montant : <b>${F(T.amt)}</b></p>`+METH.map(m=>`<button class="btn sec" style="margin-bottom:10px;" onclick="go('payDetails',{m:'${m}'})">${m}</button>`).join("")+`</div>`,
+
+  payDetails:()=>{
+    const m = T.m;
+    let num = WAVE_NUM;
+    if(m === "Moov Money") num 
